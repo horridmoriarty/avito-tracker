@@ -1,0 +1,12 @@
+{
+  "name": "avito-tracker-cloud-function",
+  "version": "1.0.0",
+  "description": "Yandex Cloud Function для Авито Трекера",
+  "main": "index.js",
+  "dependencies": {
+    "ydb-sdk": "^2.9.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
