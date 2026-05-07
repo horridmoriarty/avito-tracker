@@ -1,0 +1,4132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Авито Трекер</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f0f11'/%3E%3Crect x='8' y='8' width='48' height='48' rx='10' fill='%2316161a'/%3E%3Cpath d='M16 44 L24 28 L32 36 L40 20 L48 32' stroke='%2300c896' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%230f0f11'/%3E%3Cpath d='M40 140 L72 72 L96 108 L120 48 L152 88' stroke='%2300c896' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0f0f11">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Авито Трекер">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* System font stack — не требует загрузки */
+  :root {
+    --bg: #0f0f11;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --bg4: #26262e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f2;
+    --text2: #9090a0;
+    --text3: #606070;
+    --accent: #00c896;
+    --accent2: #00a07a;
+    --accent-dim: rgba(0,200,150,0.1);
+    --accent-dim2: rgba(0,200,150,0.18);
+    --red: #ff5a5a;
+    --red-dim: rgba(255,90,90,0.1);
+    --amber: #f0a020;
+    --amber-dim: rgba(240,160,32,0.1);
+    --blue: #4a9eff;
+    --blue-dim: rgba(74,158,255,0.1);
+    --radius: 10px;
+    --radius2: 14px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace;
+    --sidebar: 240px;
+    --header: 56px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ─── LAYOUT ─── */
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: var(--sidebar);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-mark {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .logo-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar-region {
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .region-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    padding: 0 6px;
+  }
+  .region-select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 10px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23606070' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    transition: border-color 0.15s;
+  }
+  .region-select:focus { border-color: var(--accent); }
+  .region-select option { background: var(--bg3); }
+
+  .btn-add-region {
+    width: 100%;
+    margin-top: 6px;
+    background: transparent;
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    color: var(--text3);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 7px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-add-region:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-add-region svg { flex-shrink: 0; }
+
+  .sidebar-nav {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0 6px;
+    margin: 12px 0 4px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim2); color: var(--accent); }
+  .nav-item svg { flex-shrink: 0; opacity: 0.7; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-bottom {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── MAIN ─── */
+  .main {
+    margin-left: var(--sidebar);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: var(--header);
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    gap: 12px;
+  }
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+  .topbar-region-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,200,150,0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .topbar-region-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .content { padding: 24px; flex: 1; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #00e0aa; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-secondary:hover { background: var(--bg4); color: var(--text); }
+  .btn-danger {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid rgba(255,90,90,0.2);
+  }
+  .btn-danger:hover { background: rgba(255,90,90,0.2); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* ─── PAGE SECTIONS ─── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .section-sub {
+    font-size: 13px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 20px;
+  }
+
+  /* ─── LISTINGS GRID ─── */
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .listing-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 16px 18px;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .listing-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .listing-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .listing-card:hover::before { opacity: 1; }
+
+  .listing-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  .listing-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    flex: 1;
+  }
+  .listing-card-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    background: var(--bg3);
+    padding: 3px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .listing-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-mini {
+    background: var(--bg3);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+  }
+  .stat-mini-val {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .stat-mini-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    display: block;
+  }
+
+  .listing-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-active { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,200,150,0.2); }
+  .badge-promo { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(240,160,32,0.2); }
+  .badge-inactive { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  .listing-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .icon-btn {
+    width: 28px; height: 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text3);
+  }
+  .icon-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+  .icon-btn.danger:hover { background: var(--red-dim); color: var(--red); border-color: rgba(255,90,90,0.3); }
+
+  /* ─── ADD CARD ─── */
+  .listing-add-card {
+    background: transparent;
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius2);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    min-height: 120px;
+    flex-direction: column;
+  }
+  .listing-add-card:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .add-icon {
+    width: 36px; height: 36px;
+    background: var(--bg3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .listing-add-card:hover .add-icon { background: var(--accent-dim2); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 480px;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .modal-title { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .modal-close {
+    width: 30px; height: 30px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text3);
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--text); background: var(--bg4); }
+
+  /* ─── FORM ─── */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,200,150,0.08);
+  }
+  .form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23606070' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+  .form-select option { background: var(--bg3); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-icon {
+    width: 56px; height: 56px;
+    background: var(--bg3);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .empty-state h3 { font-size: 16px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .empty-state p { font-size: 13px; line-height: 1.6; max-width: 300px; margin: 0 auto 20px; }
+
+  /* ─── REGIONS PAGE ─── */
+  .regions-list { display: flex; flex-direction: column; gap: 10px; }
+  .region-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .region-color {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .region-info { flex: 1; }
+  .region-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .region-count { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .region-current {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid rgba(0,200,150,0.2);
+  }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    z-index: 999;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+  /* ─── CHARTS / STATS ─── */
+  .chart-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .period-tabs {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .period-tab {
+    padding: 7px 12px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .period-tab:last-child { border-right: none; }
+  .period-tab:hover { color: var(--text); background: var(--bg4); }
+  .period-tab.active { background: var(--accent-dim2); color: var(--accent); }
+
+  .metric-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .metric-toggle.active { color: var(--text); border-color: var(--border2); background: var(--bg4); }
+  .metric-toggle:not(.active) { opacity: 0.5; }
+  .metric-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 260px;
+  }
+  .chart-wrap-tall { height: 320px; }
+
+  .stats-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .kpi-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 14px 16px;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .kpi-delta {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .kpi-delta.up { color: var(--accent); }
+  .kpi-delta.down { color: var(--red); }
+  .kpi-delta.flat { color: var(--text3); }
+
+  .compare-listing-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .compare-listing-check.selected {
+    color: var(--text);
+    border-color: var(--border2);
+    background: var(--bg4);
+  }
+  .compare-color-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .input-listing-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .input-listing-card.has-data { border-color: rgba(0,200,150,0.25); }
+  .input-listing-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .input-listing-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .input-listing-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg3);
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .input-fields {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
+  }
+  .input-field-wrap { position: relative; }
+  .input-field-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    display: block;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .input-field {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 500;
+    padding: 10px 12px;
+    outline: none;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .input-field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,200,150,0.1);
+    background: var(--bg4);
+  }
+  .input-field.filled { border-color: rgba(0,200,150,0.3); background: rgba(0,200,150,0.04); }
+  .input-field-hint {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 4px;
+  }
+  .input-listing-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    gap: 12px;
+  }
+  .input-prev-val {
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .input-prev-val span { color: var(--text2); font-family: var(--mono); }
+  .input-saved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .input-saved-badge.show { opacity: 1; }
+
+  /* ─── PROMO TYPE BUTTONS ─── */
+  .promo-type-btn, .promo-dur-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 0;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .promo-type-btn:hover, .promo-dur-btn:hover { border-color: var(--accent); color: var(--text); }
+  .promo-type-btn.selected, .promo-dur-btn.selected {
+    background: var(--accent-dim2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .promo-type-btn[data-val="x2"].selected { background: rgba(74,158,255,0.15); border-color: var(--blue); color: var(--blue); }
+  .promo-type-btn[data-val="x5"].selected { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+  .promo-type-btn[data-val="x10"].selected { background: rgba(255,90,90,0.12); border-color: var(--red); color: var(--red); }
+
+  /* ─── PROMOS TABLE ─── */
+  .promos-table {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    overflow: hidden;
+  }
+  .promos-table-header {
+    display: grid;
+    grid-template-columns: 2fr 80px 80px 90px 90px 100px 36px;
+    gap: 0;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .promo-row {
+    display: grid;
+    grid-template-columns: 2fr 80px 80px 90px 90px 100px 36px;
+    gap: 0;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 13px;
+    transition: background 0.1s;
+  }
+  .promo-row:last-child { border-bottom: none; }
+  .promo-row:hover { background: var(--bg3); }
+  .promo-listing-name { font-weight: 500; color: var(--text); }
+  .promo-listing-name small { display: block; font-size: 11px; color: var(--text3); font-weight: 400; margin-top: 1px; }
+  .promo-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+  .promo-type-x2 { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(74,158,255,0.2); }
+  .promo-type-x5 { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(240,160,32,0.2); }
+  .promo-type-x10 { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,90,90,0.2); }
+  .promo-status-active { color: var(--accent); font-weight: 500; }
+  .promo-status-ended { color: var(--text3); }
+  .promo-status-future { color: var(--blue); font-weight: 500; }
+
+  /* ─── ACTIVE PROMOS BANNER ─── */
+  .active-promo-banner {
+    background: linear-gradient(135deg, rgba(240,160,32,0.08) 0%, rgba(255,90,90,0.06) 100%);
+    border: 1px solid rgba(240,160,32,0.2);
+    border-radius: var(--radius2);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .active-promo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .active-promo-item strong { color: var(--text); }
+
+  /* ─── SETTINGS PAGE (update) ─── */
+  .settings-section { margin-bottom: 28px; }
+  .settings-section-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .settings-row {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    overflow: hidden;
+  }
+  .settings-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-item-info { flex: 1; }
+  .settings-item-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .settings-item-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+
+  /* ─── STEP BANNER ─── */
+  .step-banner {
+    background: linear-gradient(135deg, rgba(0,200,150,0.08) 0%, rgba(74,158,255,0.06) 100%);
+    border: 1px solid rgba(0,200,150,0.15);
+    border-radius: var(--radius2);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .step-banner-icon {
+    width: 32px; height: 32px;
+    background: var(--accent-dim2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent);
+  }
+  .step-banner-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .step-banner-text strong { color: var(--accent); font-weight: 600; }
+
+  /* ─── PLACEHOLDER SECTIONS ─── */
+  .coming-soon {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 40px;
+    text-align: center;
+    color: var(--text3);
+  }
+  .coming-soon-label {
+    display: inline-block;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(240,160,32,0.2);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .coming-soon h3 { font-size: 16px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .coming-soon p { font-size: 13px; max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+  /* ─── SYNC ─── */
+  .sync-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text3);
+    cursor: default;
+  }
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .sync-dot.ok { background: var(--accent); }
+  .sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+  .sync-dot.error { background: var(--red); }
+  .sync-label { font-size: 11px; font-weight: 500; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .cloud-config-card {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius2);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .cloud-config-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .cloud-config-sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .config-saved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--accent);
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .config-saved-badge.show { opacity: 1; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap:12px; margin-bottom:16px; }
+  .insight-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius2); padding:16px 18px; display:flex; gap:14px; align-items:flex-start; transition:border-color 0.15s; }
+  .insight-card:hover { border-color:var(--border2); }
+  .insight-icon { font-size:22px; line-height:1; flex-shrink:0; margin-top:2px; }
+  .insight-body { flex:1; min-width:0; }
+  .insight-label { font-size:11px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+  .insight-value { font-size:20px; font-weight:600; color:var(--text); font-family:var(--mono); line-height:1.1; margin-bottom:3px; }
+  .insight-sub { font-size:12px; color:var(--text2); line-height:1.4; }
+  .insight-card.highlight { border-color:rgba(0,200,150,0.3); background:rgba(0,200,150,0.03); }
+  .insight-card.warn { border-color:rgba(240,160,32,0.3); background:rgba(240,160,32,0.03); }
+  .insight-card.danger { border-color:rgba(255,90,90,0.3); background:rgba(255,90,90,0.03); }
+
+  .analytics-section { margin-bottom:28px; }
+  .analytics-section-title { font-size:12px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; }
+
+  .top-table { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius2); overflow:hidden; }
+  .top-table-title { padding:12px 16px; border-bottom:1px solid var(--border); font-size:12px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; }
+  .top-row { display:flex; align-items:center; padding:11px 16px; border-bottom:1px solid var(--border); gap:12px; font-size:13px; transition:background 0.1s; }
+  .top-row:last-child { border-bottom:none; }
+  .top-row:hover { background:var(--bg3); }
+  .top-rank { font-family:var(--mono); font-size:12px; font-weight:500; color:var(--text3); width:20px; flex-shrink:0; text-align:center; }
+  .top-rank.gold { color:#f0c040; }
+  .top-rank.silver { color:#a0a0b0; }
+  .top-rank.bronze { color:#c07840; }
+  .top-name { flex:1; font-weight:500; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .top-bar-wrap { width:120px; flex-shrink:0; background:var(--bg3); border-radius:3px; height:6px; }
+  .top-bar { height:6px; border-radius:3px; background:var(--accent); transition:width 0.5s; }
+  .top-val { font-family:var(--mono); font-size:13px; font-weight:500; color:var(--text); min-width:56px; text-align:right; flex-shrink:0; }
+
+  .roi-table { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius2); overflow:hidden; }
+  .roi-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr; padding:11px 16px; border-bottom:1px solid var(--border); font-size:13px; align-items:center; transition:background 0.1s; }
+  .roi-row:hover { background:var(--bg3); }
+  .roi-row:last-child { border-bottom:none; }
+  .roi-head { font-size:11px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--border); }
+  .roi-head:hover { background:none; }
+  .roi-positive { color:var(--accent); font-weight:600; }
+  .roi-negative { color:var(--red); font-weight:600; }
+  .roi-neutral { color:var(--text3); }
+
+  .heatmap-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius2); padding:20px; overflow-x:auto; }
+  .heatmap-grid { display:flex; gap:3px; margin-top:8px; }
+  .heatmap-col { display:flex; flex-direction:column; gap:3px; }
+  .heatmap-cell { width:14px; height:14px; border-radius:3px; background:var(--bg3); cursor:default; transition:transform 0.1s; position:relative; }
+  .heatmap-cell:hover { transform:scale(1.4); z-index:10; }
+  .heatmap-cell.l1 { background:rgba(0,200,150,0.2); }
+  .heatmap-cell.l2 { background:rgba(0,200,150,0.42); }
+  .heatmap-cell.l3 { background:rgba(0,200,150,0.66); }
+  .heatmap-cell.l4 { background:rgba(0,200,150,0.92); }
+  .heatmap-month-row { display:flex; gap:3px; margin-bottom:4px; }
+  .heatmap-month-label { font-size:10px; color:var(--text3); min-width:14px; text-align:center; }
+  .trend-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+  .trend-up { background:rgba(0,200,150,0.12); color:var(--accent); }
+  .trend-down { background:rgba(255,90,90,0.12); color:var(--red); }
+  .trend-flat { background:var(--bg3); color:var(--text3); }
+
+  /* ─── NOTES ─── */
+  .note-field {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+    resize: none;
+    transition: border-color 0.15s;
+    line-height: 1.4;
+  }
+  .note-field:focus { border-color: var(--accent); color: var(--text); }
+  .note-field::placeholder { color: var(--text3); }
+  .note-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(74,158,255,0.1);
+    border: 1px solid rgba(74,158,255,0.2);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--blue);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: help;
+  }
+
+  /* ─── PERIOD COMPARE ─── */
+  .period-setup-grid { }
+  @media (max-width: 900px) { .period-setup-grid { grid-template-columns: 1fr !important; } }
+  .period-delta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-bottom:16px; }
+  .period-delta-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius2); padding:14px 16px; }
+  .period-delta-label { font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px; }
+  .period-delta-row { display:flex;align-items:baseline;gap:8px;flex-wrap:wrap; }
+  .period-val-a { font-family:var(--mono);font-size:16px;font-weight:600;color:#00c896; }
+  .period-val-b { font-family:var(--mono);font-size:16px;font-weight:600;color:#4a9eff; }
+  .period-delta-val { font-size:12px;font-weight:600;padding:2px 7px;border-radius:20px; }
+  .period-delta-pos { background:rgba(0,200,150,0.12);color:var(--accent); }
+  .period-delta-neg { background:rgba(255,90,90,0.12);color:var(--red); }
+  .period-delta-zero { background:var(--bg3);color:var(--text3); }
+
+  /* ─── CROSS REGION ─── */
+  .cross-region-check {
+    display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+    background:var(--bg3);border:1px solid var(--border2);border-radius:20px;
+    font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;
+    transition:all 0.15s;user-select:none;
+  }
+  .cross-region-check.selected { color:var(--text);background:var(--bg4); }
+  .cross-table { background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden; }
+  .cross-row { display:grid;padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;transition:background 0.1s; }
+  .cross-row:hover { background:var(--bg3); }
+  .cross-row:last-child { border-bottom:none; }
+  .cross-head { font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em; }
+  .cross-head:hover { background:none; }
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">Tracker v0.1</div>
+      <div class="logo-title">Авито Аналитика</div>
+    </div>
+
+    <div class="sidebar-region">
+      <div class="region-label">Регион</div>
+      <select class="region-select" id="regionSelect" onchange="onRegionChange(this.value)">
+      </select>
+      <button class="btn-add-region" onclick="openModal('addRegionModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Добавить регион
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Обзор</div>
+      <button class="nav-item active" onclick="navigate('listings')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+        </svg>
+        Объявления
+      </button>
+      <button class="nav-item" onclick="navigate('stats')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 13L5.5 8.5L8.5 10.5L12 5L14 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 13h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Статистика
+      </button>
+      <button class="nav-item" onclick="navigate('compare')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="9" width="4" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="6" y="6" width="4" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="11" y="3" width="4" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/>
+        </svg>
+        Сравнение
+      </button>
+      <button class="nav-item" onclick="navigate('period')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="2" width="6" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="9" y="5" width="6" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M4 6h0M12 9h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Периоды
+      </button>
+      <button class="nav-item" onclick="navigate('crossregion')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="4" cy="8" r="3" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M7 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Меж регионами
+      </button>
+      <button class="nav-item" onclick="navigate('analytics')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M8 1v1M8 14v1M1 8h1M14 8h1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Аналитика
+      </button>
+
+      <div class="nav-section-label">Управление</div>
+      <button class="nav-item" onclick="navigate('input')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Ввод данных
+      </button>
+      <button class="nav-item" onclick="navigate('promotions')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8h2.5L6 4l4 8 1.5-4H14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Продвижения
+      </button>
+      <button class="nav-item" onclick="navigate('regions')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6" stroke="currentColor" stroke-width="1.3"/>
+        </svg>
+        Регионы
+      </button>
+
+      <div class="nav-section-label">Система</div>
+      <button class="nav-item" onclick="navigate('settings')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M13 3l-1.5 1.5M4.5 11.5L3 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Настройки
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div style="font-size:11px; color:var(--text3); text-align:center;">✓ Все 5 шагов готовы</div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Объявления</div>
+      <div class="topbar-region-badge" id="topbarRegion">Москва</div>
+      <div class="sync-indicator" id="syncIndicator" title="Статус синхронизации">
+        <span class="sync-dot" id="syncDot"></span>
+        <span class="sync-label" id="syncLabel">локально</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="syncBtn" onclick="syncNow()" title="Синхронизировать">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5A4.5 4.5 0 0111 4M11 6.5A4.5 4.5 0 012 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9 2l2 2-2 2M4 7l-2 2 2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Синхронизировать
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('addListingModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Объявление
+      </button>
+    </div>
+
+    <div class="content">
+
+      <!-- ── LISTINGS ── -->
+      <div class="page active" id="page-listings">
+        <div class="step-banner">
+          <div class="step-banner-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.5l-3.7 1.9.7-4.1-3-2.9 4.2-.8L8 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="step-banner-text">
+            <strong>✓ Готово:</strong> Приложение полностью готово. Настройте синхронизацию с Yandex Cloud в разделе «Настройки», чтобы данные были доступны всем пользователям и регионам.
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div>
+            <div class="section-title" id="listingsTitle">Объявления</div>
+            <div class="section-sub" id="listingsSub">Нет объявлений</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('addListingModal')">
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Добавить
+          </button>
+        </div>
+
+        <div id="listingsContainer"></div>
+      </div>
+
+      <!-- ── STATS ── -->
+      <div class="page" id="page-stats">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Статистика</div>
+            <div class="section-sub" id="statsSub">Динамика по объявлениям</div>
+          </div>
+        </div>
+
+        <!-- filters -->
+        <div class="chart-filters" id="statsFilters">
+          <select class="form-select" id="statsListing" style="width:220px;padding:7px 10px;font-size:13px;" onchange="renderStats()">
+            <option value="">Выберите объявление</option>
+          </select>
+          <div class="period-tabs" id="statsPeriodTabs">
+            <button class="period-tab active" data-period="7" onclick="setStatsPeriod(7,this)">7 дней</button>
+            <button class="period-tab" data-period="30" onclick="setStatsPeriod(30,this)">30 дней</button>
+            <button class="period-tab" data-period="90" onclick="setStatsPeriod(90,this)">Квартал</button>
+            <button class="period-tab" data-period="180" onclick="setStatsPeriod(180,this)">Полгода</button>
+            <button class="period-tab" data-period="365" onclick="setStatsPeriod(365,this)">Год</button>
+            <button class="period-tab" data-period="0" onclick="setStatsPeriod(0,this)">Всё время</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" class="form-input" id="statsDateFrom" style="width:140px;padding:7px 10px;font-size:12px;" onchange="setStatsPeriodCustom()">
+            <span style="font-size:12px;color:var(--text3)">—</span>
+            <input type="date" class="form-input" id="statsDateTo" style="width:140px;padding:7px 10px;font-size:12px;" onchange="setStatsPeriodCustom()">
+          </div>
+        </div>
+
+        <!-- metric toggles -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;" id="statsMetricToggles">
+          <button class="metric-toggle active" data-metric="views" onclick="toggleMetric('views',this)"><span class="metric-dot" style="background:#00c896"></span>Показы</button>
+          <button class="metric-toggle active" data-metric="contacts" onclick="toggleMetric('contacts',this)"><span class="metric-dot" style="background:#4a9eff"></span>Контакты</button>
+          <button class="metric-toggle active" data-metric="favorites" onclick="toggleMetric('favorites',this)"><span class="metric-dot" style="background:#f0a020"></span>Избранное</button>
+        </div>
+
+        <div id="statsContent">
+          <div class="empty-state">
+            <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 17l4-8 4 5 3-4 4 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 20h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+            <h3>Выберите объявление</h3>
+            <p>Выберите объявление из списка выше, чтобы увидеть его статистику</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COMPARE ── -->
+      <div class="page" id="page-compare">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Сравнение</div>
+            <div class="section-sub">Сравнение нескольких объявлений на одном графике</div>
+          </div>
+        </div>
+
+        <!-- filters -->
+        <div class="chart-filters" id="compareFilters" style="flex-wrap:wrap;align-items:flex-start;gap:12px;">
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Объявления</div>
+            <div id="compareListingChecks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Метрика</div>
+            <select class="form-select" id="compareMetric" style="width:160px;padding:7px 10px;font-size:13px;" onchange="renderCompare()">
+              <option value="views">Показы</option>
+              <option value="contacts">Контакты</option>
+              <option value="favorites">Избранное</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Период</div>
+            <div class="period-tabs">
+              <button class="period-tab active" data-period="30" onclick="setComparePeriod(30,this)">30 дней</button>
+              <button class="period-tab" data-period="90" onclick="setComparePeriod(90,this)">Квартал</button>
+              <button class="period-tab" data-period="180" onclick="setComparePeriod(180,this)">Полгода</button>
+              <button class="period-tab" data-period="365" onclick="setComparePeriod(365,this)">Год</button>
+              <button class="period-tab" data-period="0" onclick="setComparePeriod(0,this)">Всё время</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="compareContent">
+          <div class="empty-state">
+            <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="14" width="4" height="7" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="4" height="12" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="16" y="4" width="4" height="17" rx="1" stroke="currentColor" stroke-width="1.4"/></svg></div>
+            <h3>Выберите объявления</h3>
+            <p>Отметьте два или более объявления выше для сравнения</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INPUT ── -->
+      <div class="page" id="page-input">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Ввод данных</div>
+            <div class="section-sub" id="inputSub">Ежедневный ввод показателей</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" class="form-input" id="inputDate" style="width:160px;padding:7px 10px;font-size:13px;" onchange="updateInputDateLabel();renderInputListings();">
+            <button class="btn btn-primary" onclick="saveAllStats()">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7l3.5 3.5L11 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Сохранить всё
+            </button>
+          </div>
+        </div>
+
+        <!-- date nav -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;align-items:center;">
+          <button class="btn btn-secondary btn-sm" onclick="shiftInputDate(-1)">← Вчера</button>
+          <button class="btn btn-secondary btn-sm" onclick="setInputDateToday()">Сегодня</button>
+          <button class="btn btn-secondary btn-sm" onclick="shiftInputDate(1)">Завтра →</button>
+          <span id="inputDateLabel" style="font-size:12px;color:var(--text3);margin-left:4px;"></span>
+        </div>
+
+        <div id="inputListingsContainer"></div>
+      </div>
+
+      <!-- ── PROMOTIONS ── -->
+      <div class="page" id="page-promotions">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Продвижения</div>
+            <div class="section-sub" id="promoSub">Учёт платного продвижения</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('addPromoModal')">
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Добавить
+          </button>
+        </div>
+
+        <!-- active promos summary -->
+        <div id="promoActiveBanner"></div>
+
+        <!-- filter bar -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <select class="form-select" id="promoFilterListing" style="width:200px;padding:7px 10px;font-size:13px;" onchange="renderPromos()">
+            <option value="">Все объявления</option>
+          </select>
+          <select class="form-select" id="promoFilterType" style="width:140px;padding:7px 10px;font-size:13px;" onchange="renderPromos()">
+            <option value="">Все типы</option>
+            <option value="x2">×2</option>
+            <option value="x5">×5</option>
+            <option value="x10">×10</option>
+          </select>
+        </div>
+
+        <div id="promosContainer"></div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div class="page" id="page-analytics">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Аналитика</div>
+            <div class="section-sub" id="analyticsSub">Автоматическая статистика по региону</div>
+          </div>
+          <div class="period-tabs" id="analyticsPeriodTabs">
+            <button class="period-tab active" onclick="setAnalyticsPeriod(30,this)">30 дней</button>
+            <button class="period-tab" onclick="setAnalyticsPeriod(90,this)">Квартал</button>
+            <button class="period-tab" onclick="setAnalyticsPeriod(180,this)">Полгода</button>
+            <button class="period-tab" onclick="setAnalyticsPeriod(365,this)">Год</button>
+            <button class="period-tab" onclick="setAnalyticsPeriod(0,this)">Всё время</button>
+          </div>
+        </div>
+        <div id="analyticsContent"></div>
+      </div>
+
+      <!-- ── PERIODS PAGE ── -->
+      <div class="page" id="page-period">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Сравнение периодов</div>
+            <div class="section-sub" id="periodSub">Сравните любые два периода для одного объявления</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" class="period-setup-grid">
+          <!-- Period A -->
+          <div class="chart-card" style="padding:16px 18px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00c896;flex-shrink:0;"></span>
+              <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Период A</div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label">Объявление</label>
+              <select class="form-select" id="periodListingA" style="font-size:13px;padding:7px 10px;" onchange="renderPeriod()"></select>
+            </div>
+            <div class="period-tabs" style="margin-bottom:10px;" id="periodPresetA">
+              <button class="period-tab active" onclick="applyPeriodPreset('A',7,this)">7д</button>
+              <button class="period-tab" onclick="applyPeriodPreset('A',30,this)">30д</button>
+              <button class="period-tab" onclick="applyPeriodPreset('A',90,this)">Квартал</button>
+              <button class="period-tab" onclick="applyPeriodPreset('A',180,this)">Полгода</button>
+              <button class="period-tab" onclick="applyPeriodPreset('A',365,this)">Год</button>
+              <button class="period-tab" onclick="applyPeriodPreset('A',0,this)">Своё</button>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">С</label><input type="date" class="form-input" id="periodFromA" style="font-size:12px;padding:7px 10px;" onchange="renderPeriod()"></div>
+              <div class="form-group"><label class="form-label">По</label><input type="date" class="form-input" id="periodToA" style="font-size:12px;padding:7px 10px;" onchange="renderPeriod()"></div>
+            </div>
+          </div>
+          <!-- Period B -->
+          <div class="chart-card" style="padding:16px 18px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4a9eff;flex-shrink:0;"></span>
+              <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Период B</div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label">Объявление</label>
+              <select class="form-select" id="periodListingB" style="font-size:13px;padding:7px 10px;" onchange="renderPeriod()"></select>
+            </div>
+            <div class="period-tabs" style="margin-bottom:10px;" id="periodPresetB">
+              <button class="period-tab active" onclick="applyPeriodPreset('B',7,this)">7д</button>
+              <button class="period-tab" onclick="applyPeriodPreset('B',30,this)">30д</button>
+              <button class="period-tab" onclick="applyPeriodPreset('B',90,this)">Квартал</button>
+              <button class="period-tab" onclick="applyPeriodPreset('B',180,this)">Полгода</button>
+              <button class="period-tab" onclick="applyPeriodPreset('B',365,this)">Год</button>
+              <button class="period-tab" onclick="applyPeriodPreset('B',0,this)">Своё</button>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">С</label><input type="date" class="form-input" id="periodFromB" style="font-size:12px;padding:7px 10px;" onchange="renderPeriod()"></div>
+              <div class="form-group"><label class="form-label">По</label><input type="date" class="form-input" id="periodToB" style="font-size:12px;padding:7px 10px;" onchange="renderPeriod()"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="periodContent"></div>
+      </div>
+
+      <!-- ── CROSS-REGION PAGE ── -->
+      <div class="page" id="page-crossregion">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Сравнение регионов</div>
+            <div class="section-sub" id="crossSub">Сравнение показателей между регионами</div>
+          </div>
+        </div>
+
+        <div class="chart-filters" style="flex-wrap:wrap;gap:12px;align-items:flex-start;margin-bottom:20px;">
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Регионы</div>
+            <div id="crossRegionChecks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Метрика</div>
+            <select class="form-select" id="crossMetric" style="width:160px;padding:7px 10px;font-size:13px;" onchange="renderCrossRegion()">
+              <option value="views">Показы</option>
+              <option value="contacts">Контакты</option>
+              <option value="favorites">Избранное</option>
+              <option value="convRate">Конверсия %</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Период</div>
+            <div class="period-tabs" id="crossPeriodTabs">
+              <button class="period-tab active" onclick="setCrossPeriod(30,this)">30 дней</button>
+              <button class="period-tab" onclick="setCrossPeriod(90,this)">Квартал</button>
+              <button class="period-tab" onclick="setCrossPeriod(180,this)">Полгода</button>
+              <button class="period-tab" onclick="setCrossPeriod(365,this)">Год</button>
+              <button class="period-tab" onclick="setCrossPeriod(0,this)">Всё время</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Группировка</div>
+            <select class="form-select" id="crossGroupBy" style="width:160px;padding:7px 10px;font-size:13px;" onchange="renderCrossRegion()">
+              <option value="region">По регионам (итого)</option>
+              <option value="listing">По объявлениям</option>
+              <option value="timeline">Динамика по дням</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="crossContent"></div>
+      </div>
+      <div class="page" id="page-regions">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Регионы</div>
+            <div class="section-sub" id="regionsSub">Управление регионами</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('addRegionModal')">
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Добавить регион
+          </button>
+        </div>
+        <div class="regions-list" id="regionsContainer"></div>
+      </div>
+
+      <!-- ── SETTINGS ── -->
+      <div class="page" id="page-settings">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Настройки</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">☁️ Облачная синхронизация (Yandex Cloud)</div>
+          <div class="cloud-config-card">
+            <div class="cloud-config-title">Подключение к Yandex Cloud</div>
+            <div class="cloud-config-sub">Вставьте URL вашей Cloud Function. Все пользователи будут видеть единые данные. Без настройки приложение работает локально.</div>
+            <div class="form-group">
+              <label class="form-label">URL Cloud Function</label>
+              <input class="form-input" type="url" id="cfUrl" placeholder="https://functions.yandexcloud.net/xxxxxxxx" style="font-family:var(--mono);font-size:12px;">
+              <div class="form-hint">Будет создана на шаге 4 инструкции ниже</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="saveCloudConfig()">Сохранить</button>
+              <button class="btn btn-secondary btn-sm" onclick="testCloudConnection()">Проверить соединение</button>
+              <span class="config-saved-badge" id="configSavedBadge">✓ Сохранено</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Статус синхронизации</div>
+                <div class="settings-item-sub" id="cloudStatusText">Не настроено — работает локально</div>
+              </div>
+              <div class="sync-dot" id="cloudStatusDot" style="width:10px;height:10px;flex-shrink:0;"></div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Последняя синхронизация</div>
+                <div class="settings-item-sub" id="lastSyncText">—</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="syncNow()">Синхронизировать</button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Автосинхронизация</div>
+                <div class="settings-item-sub">Синхронизировать при каждом сохранении данных</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="autoSyncToggle" onchange="toggleAutoSync(this.checked)" style="width:16px;height:16px;accent-color:var(--accent);">
+                <span style="font-size:12px;color:var(--text2);" id="autoSyncLabel">Выкл</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Данные</div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Экспорт данных</div>
+                <div class="settings-item-sub">Скачать все данные в формате JSON</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="exportData()">Экспорт</button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Импорт данных</div>
+                <div class="settings-item-sub">Восстановить данные из JSON файла</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()">Импорт</button>
+              <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">О приложении</div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Версия</div>
+                <div class="settings-item-sub">Авито Аналитика Трекер</div>
+              </div>
+              <span style="font-family:var(--mono);font-size:12px;color:var(--text3)">0.1.0</span>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Прогресс разработки</div>
+                <div class="settings-item-sub">Все шаги завершены ✓</div>
+              </div>
+              <span style="font-family:var(--mono);font-size:12px;color:var(--accent)">100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /app -->
+
+<!-- ─── MODALS ─── -->
+
+<!-- Add Listing Modal -->
+<div class="modal-overlay" id="addListingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Новое объявление</div>
+      <button class="modal-close" onclick="closeModal('addListingModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Название объявления</label>
+      <input class="form-input" type="text" id="newListingTitle" placeholder="Например: iPhone 13 Pro, 256GB, синий">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ID объявления на Авито</label>
+        <input class="form-input" type="text" id="newListingAvitoId" placeholder="1234567890">
+        <div class="form-hint">Можно найти в URL объявления</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <select class="form-select" id="newListingCategory">
+          <option value="">Без категории</option>
+          <option>Электроника</option>
+          <option>Авто</option>
+          <option>Недвижимость</option>
+          <option>Одежда</option>
+          <option>Мебель</option>
+          <option>Другое</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Цена (₽)</label>
+      <input class="form-input" type="number" id="newListingPrice" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Заметки</label>
+      <textarea class="form-textarea" id="newListingNotes" placeholder="Дополнительная информация..."></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addListingModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="addListing()">Добавить объявление</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Region Modal -->
+<div class="modal-overlay" id="addRegionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Новый регион</div>
+      <button class="modal-close" onclick="closeModal('addRegionModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Название региона</label>
+      <input class="form-input" type="text" id="newRegionName" placeholder="Например: Санкт-Петербург">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ответственный (необязательно)</label>
+      <input class="form-input" type="text" id="newRegionOwner" placeholder="Имя или должность">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addRegionModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="addRegion()">Добавить регион</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Listing Modal -->
+<div class="modal-overlay" id="editListingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Редактировать объявление</div>
+      <button class="modal-close" onclick="closeModal('editListingModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <input type="hidden" id="editListingId">
+    <div class="form-group">
+      <label class="form-label">Название объявления</label>
+      <input class="form-input" type="text" id="editListingTitle">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ID на Авито</label>
+        <input class="form-input" type="text" id="editListingAvitoId">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <select class="form-select" id="editListingCategory">
+          <option value="">Без категории</option>
+          <option>Электроника</option>
+          <option>Авто</option>
+          <option>Недвижимость</option>
+          <option>Одежда</option>
+          <option>Мебель</option>
+          <option>Другое</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Цена (₽)</label>
+      <input class="form-input" type="number" id="editListingPrice">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Заметки</label>
+      <textarea class="form-textarea" id="editListingNotes"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Статус</label>
+      <select class="form-select" id="editListingStatus">
+        <option value="active">Активно</option>
+        <option value="inactive">Неактивно</option>
+        <option value="sold">Продано</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('editListingModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveEditListing()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Promo Modal -->
+<div class="modal-overlay" id="addPromoModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">Добавить продвижение</div>
+      <button class="modal-close" onclick="closeModal('addPromoModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Объявление</label>
+      <select class="form-select" id="promoListingId"></select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Тип продвижения</label>
+        <div style="display:flex;gap:8px;">
+          <label class="promo-type-btn" data-val="x2">
+            <input type="radio" name="promoType" value="x2" style="display:none">
+            <span>×2</span>
+          </label>
+          <label class="promo-type-btn" data-val="x5">
+            <input type="radio" name="promoType" value="x5" style="display:none">
+            <span>×5</span>
+          </label>
+          <label class="promo-type-btn" data-val="x10">
+            <input type="radio" name="promoType" value="x10" style="display:none">
+            <span>×10</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Срок</label>
+        <div style="display:flex;gap:8px;">
+          <label class="promo-dur-btn" data-val="1">
+            <input type="radio" name="promoDuration" value="1" style="display:none">
+            <span>1 день</span>
+          </label>
+          <label class="promo-dur-btn" data-val="7">
+            <input type="radio" name="promoDuration" value="7" style="display:none">
+            <span>7 дней</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Дата начала</label>
+        <input class="form-input" type="date" id="promoStartDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Стоимость (₽)</label>
+        <input class="form-input" type="number" id="promoCost" placeholder="0">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Заметка (необязательно)</label>
+      <input class="form-input" type="text" id="promoNote" placeholder="Например: тест нового формата">
+    </div>
+
+    <!-- preview -->
+    <div id="promoPreview" style="background:var(--bg3);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text2);display:none;">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addPromoModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="addPromo()">Добавить продвижение</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-dot"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ─── STATE ───
+const COLORS = ['#00c896','#4a9eff','#f0a020','#ff5a5a','#a78bfa','#34d399','#fb923c','#f472b6'];
+
+let state = {
+  regions: [],
+  currentRegion: null,
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('avitoTracker');
+    if (saved) state = JSON.parse(saved);
+  } catch(e) {}
+  if (!state.regions || state.regions.length === 0) {
+    state.regions = [
+      { id: 'r1', name: 'Москва', owner: '', color: COLORS[0], listings: [] },
+      { id: 'r2', name: 'Санкт-Петербург', owner: '', color: COLORS[1], listings: [] },
+    ];
+    state.currentRegion = 'r1';
+    saveState();
+  }
+  if (!state.currentRegion) state.currentRegion = state.regions[0].id;
+}
+
+function saveState() {
+  localStorage.setItem('avitoTracker', JSON.stringify(state));
+}
+
+function getCurrentRegion() {
+  return state.regions.find(r => r.id === state.currentRegion);
+}
+
+// ─── NAVIGATION ───
+const PAGE_TITLES = {
+  listings: 'Объявления',
+  stats: 'Статистика',
+  compare: 'Сравнение',
+  period: 'Сравнение периодов',
+  crossregion: 'Сравнение регионов',
+  input: 'Ввод данных',
+  promotions: 'Продвижения',
+  regions: 'Регионы',
+  analytics: 'Аналитика',
+  settings: 'Настройки',
+};
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`.nav-item[onclick="navigate('${page}')"]`).classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[page] || page;
+
+  const addBtn = document.querySelector('.topbar .btn-primary');
+  if (page === 'listings') {
+    addBtn.style.display = '';
+    addBtn.onclick = () => openModal('addListingModal');
+    addBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Объявление`;
+  } else if (page === 'promotions') {
+    addBtn.style.display = '';
+    addBtn.onclick = () => { openModal('addPromoModal'); initPromoModal(); };
+    addBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Добавить`;
+  } else {
+    addBtn.style.display = 'none';
+  }
+
+  if (page === 'regions') renderRegions();
+  if (page === 'input') { initInputDate(); renderInputListings(); }
+  if (page === 'promotions') renderPromos();
+  if (page === 'stats') { initChartDefaults(); initStatsPage(); renderStats(); }
+  if (page === 'compare') { initChartDefaults(); initComparePage(); renderCompare(); }
+  if (page === 'analytics') { renderAnalytics(); }
+  if (page === 'period') { initChartDefaults(); initPeriodPage(); }
+  if (page === 'crossregion') { initChartDefaults(); initCrossRegionPage(); }
+}
+
+// ─── REGIONS ───
+function renderRegionSelect() {
+  const sel = document.getElementById('regionSelect');
+  sel.innerHTML = state.regions.map(r =>
+    `<option value="${r.id}" ${r.id === state.currentRegion ? 'selected' : ''}>${r.name}</option>`
+  ).join('');
+}
+
+function onRegionChange(id) {
+  state.currentRegion = id;
+  saveState();
+  const r = getCurrentRegion();
+  document.getElementById('topbarRegion').textContent = r.name;
+  renderListings();
+  renderRegions();
+}
+
+function addRegion() {
+  const name = document.getElementById('newRegionName').value.trim();
+  if (!name) { showToast('Введите название региона'); return; }
+  if (state.regions.find(r => r.name.toLowerCase() === name.toLowerCase())) {
+    showToast('Такой регион уже существует'); return;
+  }
+  const id = 'r' + Date.now();
+  const color = COLORS[state.regions.length % COLORS.length];
+  state.regions.push({ id, name, owner: document.getElementById('newRegionOwner').value.trim(), color, listings: [] });
+  saveState();
+  renderRegionSelect();
+  renderRegions();
+  closeModal('addRegionModal');
+  document.getElementById('newRegionName').value = '';
+  document.getElementById('newRegionOwner').value = '';
+  showToast(`Регион «${name}» добавлен`);
+}
+
+function deleteRegion(id) {
+  if (state.regions.length <= 1) { showToast('Нельзя удалить последний регион'); return; }
+  const r = state.regions.find(r => r.id === id);
+  if (!confirm(`Удалить регион «${r.name}»? Все его объявления будут удалены.`)) return;
+  state.regions = state.regions.filter(r => r.id !== id);
+  if (state.currentRegion === id) state.currentRegion = state.regions[0].id;
+  saveState();
+  renderRegionSelect();
+  renderRegions();
+  renderListings();
+  onRegionChange(state.currentRegion);
+  showToast(`Регион «${r.name}» удалён`);
+}
+
+function switchToRegion(id) {
+  state.currentRegion = id;
+  saveState();
+  document.getElementById('regionSelect').value = id;
+  const r = getCurrentRegion();
+  document.getElementById('topbarRegion').textContent = r.name;
+  renderListings();
+  renderRegions();
+  navigate('listings');
+}
+
+function renderRegions() {
+  const container = document.getElementById('regionsContainer');
+  const sub = document.getElementById('regionsSub');
+  sub.textContent = `${state.regions.length} ${plural(state.regions.length, 'регион', 'региона', 'регионов')}`;
+
+  if (state.regions.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>Нет регионов</p></div>`;
+    return;
+  }
+  container.innerHTML = state.regions.map(r => `
+    <div class="region-item">
+      <div class="region-color" style="background:${r.color}"></div>
+      <div class="region-info">
+        <div class="region-name">${esc(r.name)}</div>
+        <div class="region-count">${r.listings.length} ${plural(r.listings.length,'объявление','объявления','объявлений')}${r.owner ? ' · ' + esc(r.owner) : ''}</div>
+      </div>
+      ${r.id === state.currentRegion ? '<span class="region-current">Текущий</span>' : `<button class="btn btn-secondary btn-sm" onclick="switchToRegion('${r.id}')">Выбрать</button>`}
+      ${state.regions.length > 1 ? `<button class="icon-btn danger" onclick="deleteRegion('${r.id}')" title="Удалить"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>` : ''}
+    </div>
+  `).join('');
+}
+
+// ─── LISTINGS ───
+function addListing() {
+  const title = document.getElementById('newListingTitle').value.trim();
+  if (!title) { showToast('Введите название объявления'); return; }
+  const region = getCurrentRegion();
+  const listing = {
+    id: 'l' + Date.now(),
+    title,
+    avitoId: document.getElementById('newListingAvitoId').value.trim(),
+    category: document.getElementById('newListingCategory').value,
+    price: parseFloat(document.getElementById('newListingPrice').value) || 0,
+    notes: document.getElementById('newListingNotes').value.trim(),
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    stats: [],
+    promotions: [],
+  };
+  region.listings.push(listing);
+  saveState();
+  renderListings();
+  closeModal('addListingModal');
+  ['newListingTitle','newListingAvitoId','newListingPrice','newListingNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('newListingCategory').value = '';
+  showToast(`Объявление добавлено`);
+}
+
+function editListing(id) {
+  const region = getCurrentRegion();
+  const l = region.listings.find(l => l.id === id);
+  if (!l) return;
+  document.getElementById('editListingId').value = id;
+  document.getElementById('editListingTitle').value = l.title;
+  document.getElementById('editListingAvitoId').value = l.avitoId || '';
+  document.getElementById('editListingCategory').value = l.category || '';
+  document.getElementById('editListingPrice').value = l.price || '';
+  document.getElementById('editListingNotes').value = l.notes || '';
+  document.getElementById('editListingStatus').value = l.status || 'active';
+  openModal('editListingModal');
+}
+
+function saveEditListing() {
+  const id = document.getElementById('editListingId').value;
+  const region = getCurrentRegion();
+  const l = region.listings.find(l => l.id === id);
+  if (!l) return;
+  l.title = document.getElementById('editListingTitle').value.trim();
+  l.avitoId = document.getElementById('editListingAvitoId').value.trim();
+  l.category = document.getElementById('editListingCategory').value;
+  l.price = parseFloat(document.getElementById('editListingPrice').value) || 0;
+  l.notes = document.getElementById('editListingNotes').value.trim();
+  l.status = document.getElementById('editListingStatus').value;
+  saveState();
+  renderListings();
+  closeModal('editListingModal');
+  showToast('Изменения сохранены');
+}
+
+function deleteListing(id) {
+  const region = getCurrentRegion();
+  const l = region.listings.find(l => l.id === id);
+  if (!confirm(`Удалить объявление «${l.title}»? Все данные будут потеряны.`)) return;
+  region.listings = region.listings.filter(l => l.id !== id);
+  saveState();
+  renderListings();
+  showToast('Объявление удалено');
+}
+
+function renderListings() {
+  const region = getCurrentRegion();
+  const container = document.getElementById('listingsContainer');
+  const title = document.getElementById('listingsTitle');
+  const sub = document.getElementById('listingsSub');
+
+  title.textContent = region ? region.name : 'Объявления';
+  sub.textContent = region ? `${region.listings.length} ${plural(region.listings.length,'объявление','объявления','объявлений')}` : '';
+
+  if (!region || region.listings.length === 0) {
+    container.innerHTML = `
+      <div class="listings-grid">
+        <div class="listing-add-card" onclick="openModal('addListingModal')">
+          <div class="add-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          Добавить первое объявление
+        </div>
+      </div>`;
+    return;
+  }
+
+  const STATUS_BADGE = {
+    active: `<span class="badge badge-active"><span class="badge-dot"></span>Активно</span>`,
+    inactive: `<span class="badge badge-inactive">Неактивно</span>`,
+    sold: `<span class="badge badge-inactive">Продано</span>`,
+  };
+
+  container.innerHTML = `<div class="listings-grid">` +
+    region.listings.map(l => {
+      const lastStat = l.stats && l.stats.length > 0 ? l.stats[l.stats.length - 1] : null;
+      const hasPromo = l.promotions && l.promotions.some(p => {
+        const end = new Date(p.startDate);
+        end.setDate(end.getDate() + (p.duration || 1));
+        return end >= new Date();
+      });
+      return `
+      <div class="listing-card">
+        <div class="listing-card-header">
+          <div class="listing-card-title">${esc(l.title)}</div>
+          ${l.avitoId ? `<span class="listing-card-id">#${esc(l.avitoId)}</span>` : ''}
+        </div>
+        <div class="listing-card-stats">
+          <div class="stat-mini">
+            <span class="stat-mini-val">${lastStat ? lastStat.views : '—'}</span>
+            <span class="stat-mini-lbl">Показы</span>
+          </div>
+          <div class="stat-mini">
+            <span class="stat-mini-val">${lastStat ? lastStat.contacts : '—'}</span>
+            <span class="stat-mini-lbl">Контакты</span>
+          </div>
+          <div class="stat-mini">
+            <span class="stat-mini-val">${lastStat ? lastStat.favorites : '—'}</span>
+            <span class="stat-mini-lbl">Избранное</span>
+          </div>
+        </div>
+        <div class="listing-card-footer">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            ${STATUS_BADGE[l.status] || STATUS_BADGE.active}
+            ${hasPromo ? `<span class="badge badge-promo"><span class="badge-dot"></span>Продвижение</span>` : ''}
+            ${l.category ? `<span class="badge badge-inactive">${esc(l.category)}</span>` : ''}
+          </div>
+          <div class="listing-actions">
+            <button class="icon-btn" onclick="editListing('${l.id}')" title="Редактировать">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M8 2l2 2-6 6H2V8l6-6z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="icon-btn danger" onclick="deleteListing('${l.id}')" title="Удалить">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 3h8M5 3V2h2v1M4 3v7h4V3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        ${l.price ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text3)">${l.price.toLocaleString('ru-RU')} ₽</div>` : ''}
+      </div>`;
+    }).join('') +
+    `<div class="listing-add-card" onclick="openModal('addListingModal')">
+      <div class="add-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      Ещё объявление
+    </div>
+    </div>`;
+}
+
+// ─── MODAL ───
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── EXPORT / IMPORT ───
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `avito-tracker-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('Данные экспортированы');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.regions) throw new Error('Неверный формат');
+      state = data;
+      saveState();
+      init();
+      showToast('Данные импортированы');
+    } catch(err) {
+      showToast('Ошибка: неверный формат файла');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ─── STEP 2: DAILY INPUT ───
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateRu(str) {
+  if (!str) return '';
+  const [y, m, d] = str.split('-');
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  return `${+d} ${months[+m - 1]} ${y}`;
+}
+
+function initInputDate() {
+  const inp = document.getElementById('inputDate');
+  if (!inp.value) inp.value = todayStr();
+  updateInputDateLabel();
+}
+
+function updateInputDateLabel() {
+  const val = document.getElementById('inputDate').value;
+  const label = document.getElementById('inputDateLabel');
+  if (val === todayStr()) label.textContent = '— сегодня';
+  else if (val === shiftDate(todayStr(), -1)) label.textContent = '— вчера';
+  else label.textContent = '';
+}
+
+function shiftDate(dateStr, delta) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + delta);
+  return d.toISOString().slice(0, 10);
+}
+
+function shiftInputDate(delta) {
+  const inp = document.getElementById('inputDate');
+  inp.value = shiftDate(inp.value || todayStr(), delta);
+  updateInputDateLabel();
+  renderInputListings();
+}
+
+function setInputDateToday() {
+  document.getElementById('inputDate').value = todayStr();
+  updateInputDateLabel();
+  renderInputListings();
+}
+
+function getStatForDate(listing, date) {
+  return (listing.stats || []).find(s => s.date === date) || null;
+}
+
+function getPrevStat(listing, date) {
+  const sorted = (listing.stats || []).filter(s => s.date < date).sort((a,b) => b.date.localeCompare(a.date));
+  return sorted[0] || null;
+}
+
+function renderInputListings() {
+  const region = getCurrentRegion();
+  const container = document.getElementById('inputListingsContainer');
+  const date = document.getElementById('inputDate').value || todayStr();
+  updateInputDateLabel();
+
+  if (!region || region.listings.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 12h6M9 16h6M7 4h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <h3>Нет объявлений</h3>
+      <p>Сначала добавьте объявления в разделе «Объявления»</p>
+      <button class="btn btn-primary" onclick="navigate('listings')">Перейти к объявлениям</button>
+    </div>`;
+    return;
+  }
+
+  const active = region.listings.filter(l => l.status === 'active');
+  const inactive = region.listings.filter(l => l.status !== 'active');
+
+  let html = '';
+
+  if (active.length > 0) {
+    html += active.map(l => buildInputCard(l, date)).join('');
+  }
+  if (inactive.length > 0) {
+    html += `<div style="font-size:12px;color:var(--text3);margin:16px 0 10px;text-transform:uppercase;letter-spacing:0.06em;font-weight:500;">Неактивные / Проданные</div>`;
+    html += inactive.map(l => buildInputCard(l, date, true)).join('');
+  }
+
+  container.innerHTML = html;
+
+  // restore filled state
+  region.listings.forEach(l => {
+    const stat = getStatForDate(l, date);
+    if (stat) {
+      ['views','contacts','favorites'].forEach(key => {
+        const el = document.getElementById(`inp_${l.id}_${key}`);
+        if (el && stat[key] !== undefined && stat[key] !== null && stat[key] !== '') {
+          el.value = stat[key];
+          el.classList.add('filled');
+        }
+      });
+    }
+  });
+}
+
+function buildInputCard(l, date, dimmed) {
+  const prev = getPrevStat(l, date);
+  const stat = getStatForDate(l, date);
+  const hasData = stat && (stat.views !== '' || stat.contacts !== '' || stat.favorites !== '');
+
+  const prevHtml = prev
+    ? `Предыдущие данные (${formatDateRu(prev.date)}): <span>${prev.views ?? '—'}</span> показов · <span>${prev.contacts ?? '—'}</span> контактов · <span>${prev.favorites ?? '—'}</span> изб.`
+    : `Нет предыдущих данных`;
+
+  return `
+  <div class="input-listing-card ${hasData ? 'has-data' : ''}" id="card_${l.id}" style="${dimmed ? 'opacity:0.6' : ''}">
+    <div class="input-listing-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="input-listing-title">${esc(l.title)}</div>
+        ${l.avitoId ? `<span class="input-listing-id">#${esc(l.avitoId)}</span>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="input-saved-badge" id="saved_${l.id}">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Сохранено
+        </span>
+        <button class="btn btn-secondary btn-sm" onclick="saveStat('${l.id}')">Сохранить</button>
+      </div>
+    </div>
+    <div class="input-fields">
+      <div class="input-field-wrap">
+        <span class="input-field-label">👁 Показы</span>
+        <input class="input-field" type="number" id="inp_${l.id}_views" min="0" placeholder="0"
+          oninput="onInputChange('${l.id}','views',this)"
+          onkeydown="inputKeyNav(event,'${l.id}','views')">
+        <div class="input-field-hint">просмотров объявления</div>
+      </div>
+      <div class="input-field-wrap">
+        <span class="input-field-label">📞 Контакты</span>
+        <input class="input-field" type="number" id="inp_${l.id}_contacts" min="0" placeholder="0"
+          oninput="onInputChange('${l.id}','contacts',this)"
+          onkeydown="inputKeyNav(event,'${l.id}','contacts')">
+        <div class="input-field-hint">просмотров контакта</div>
+      </div>
+      <div class="input-field-wrap">
+        <span class="input-field-label">⭐ Избранное</span>
+        <input class="input-field" type="number" id="inp_${l.id}_favorites" min="0" placeholder="0"
+          oninput="onInputChange('${l.id}','favorites',this)"
+          onkeydown="inputKeyNav(event,'${l.id}','favorites')">
+        <div class="input-field-hint">добавлений в избранное</div>
+      </div>
+    </div>
+    <div class="input-listing-footer">
+      <div class="input-prev-val">${prevHtml}</div>
+    </div>
+    <div style="margin-top:10px;">
+      <label class="input-field-label">📝 Заметка на день</label>
+      <textarea class="note-field" id="inp_${l.id}_note" rows="2" placeholder="Например: снизил цену, обновил фото, поменял заголовок…" oninput="onNoteChange('${l.id}',this)">${stat?.note || ''}</textarea>
+    </div>
+  </div>`;
+}
+
+function onNoteChange(listingId, el) {
+  // live-update note in state without full save
+  const region = getCurrentRegion();
+  const listing = region?.listings.find(l => l.id === listingId);
+  if (!listing) return;
+  const date = document.getElementById('inputDate').value || todayStr();
+  if (!listing.stats) listing.stats = [];
+  let stat = listing.stats.find(s => s.date === date);
+  if (!stat) { stat = { date, views: null, contacts: null, favorites: null, note: '' }; listing.stats.push(stat); }
+  stat.note = el.value.trim();
+}
+
+// ─── PERIOD COMPARE ───
+let periodChartA = null, periodChartB = null, periodChartOverlay = null;
+
+function initPeriodPage() {
+  const region = getCurrentRegion();
+  const listings = region?.listings || [];
+  ['A','B'].forEach(side => {
+    const sel = document.getElementById(`periodListing${side}`);
+    const prev = sel.value;
+    sel.innerHTML = listings.map(l => `<option value="${l.id}" ${l.id===prev?'selected':''}>${esc(l.title)}</option>`).join('');
+  });
+  const today = todayStr();
+  if (!document.getElementById('periodFromA').value) {
+    document.getElementById('periodFromA').value = shiftDate(today,-6);
+    document.getElementById('periodToA').value = today;
+    document.getElementById('periodFromB').value = shiftDate(today,-37);
+    document.getElementById('periodToB').value = shiftDate(today,-31);
+  }
+  renderPeriod();
+}
+
+function applyPeriodPreset(side, days, btn) {
+  document.querySelectorAll(`#periodPreset${side} .period-tab`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (days === 0) return; // custom — user sets manually
+  const today = todayStr();
+  document.getElementById(`periodFrom${side}`).value = shiftDate(today,-days+1);
+  document.getElementById(`periodTo${side}`).value = today;
+  renderPeriod();
+}
+
+function renderPeriod() {
+  const region = getCurrentRegion();
+  const content = document.getElementById('periodContent');
+  const listingIdA = document.getElementById('periodListingA').value;
+  const listingIdB = document.getElementById('periodListingB').value;
+  const fromA = document.getElementById('periodFromA').value;
+  const toA = document.getElementById('periodToA').value;
+  const fromB = document.getElementById('periodFromB').value;
+  const toB = document.getElementById('periodToB').value;
+
+  if (!listingIdA || !fromA || !toA || !fromB || !toB) {
+    content.innerHTML = `<div class="empty-state"><h3>Выберите объявления и периоды</h3></div>`;
+    return;
+  }
+
+  const listingA = region.listings.find(l=>l.id===listingIdA);
+  const listingB = region.listings.find(l=>l.id===listingIdB);
+  if (!listingA || !listingB) return;
+
+  const statsA = filterStatsByPeriod(listingA.stats||[], -1, fromA, toA);
+  const statsB = filterStatsByPeriod(listingB.stats||[], -1, fromB, toB);
+  const kpisA = calcKPIs(statsA);
+  const kpisB = calcKPIs(statsB);
+
+  document.getElementById('periodSub').textContent =
+    `${listingA.title === listingB.title ? listingA.title : listingA.title + ' vs ' + listingB.title}`;
+
+  if (!kpisA && !kpisB) {
+    content.innerHTML = `<div class="empty-state"><h3>Нет данных за выбранные периоды</h3><p>Введите данные во вкладке «Ввод данных»</p></div>`;
+    return;
+  }
+
+  function deltaCard(label, valA, valB, fmtFn) {
+    const a = valA ?? 0, b = valB ?? 0;
+    const diff = a - b;
+    const pct = b !== 0 ? Math.round((diff/b)*100) : null;
+    const cls = diff > 0 ? 'period-delta-pos' : diff < 0 ? 'period-delta-neg' : 'period-delta-zero';
+    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+    const pctStr = pct !== null ? `${arrow} ${Math.abs(pct)}%` : arrow;
+    return `<div class="period-delta-card">
+      <div class="period-delta-label">${label}</div>
+      <div class="period-delta-row">
+        <span class="period-val-a">${valA != null ? fmtFn(valA) : '—'}</span>
+        <span style="color:var(--text3);font-size:12px;">vs</span>
+        <span class="period-val-b">${valB != null ? fmtFn(valB) : '—'}</span>
+        ${(valA != null && valB != null) ? `<span class="period-delta-val ${cls}">${pctStr}</span>` : ''}
+      </div>
+    </div>`;
+  }
+
+  const fmt = v => v?.toLocaleString('ru-RU') ?? '—';
+  const fmtPct = v => v != null ? v.toFixed(1)+'%' : '—';
+  const convA = kpisA && kpisA.totalViews > 0 ? (kpisA.totalContacts/kpisA.totalViews*100) : null;
+  const convB = kpisB && kpisB.totalViews > 0 ? (kpisB.totalContacts/kpisB.totalViews*100) : null;
+
+  // notes timeline for both periods
+  const notesA = statsA.filter(s=>s.note).map(s=>`<div style="display:flex;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:#00c896;font-family:var(--mono);flex-shrink:0;">${formatDateShort(s.date)}</span><span style="color:var(--text2);">${esc(s.note)}</span></div>`).join('');
+  const notesB = statsB.filter(s=>s.note).map(s=>`<div style="display:flex;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:#4a9eff;font-family:var(--mono);flex-shrink:0;">${formatDateShort(s.date)}</span><span style="color:var(--text2);">${esc(s.note)}</span></div>`).join('');
+
+  content.innerHTML = `
+    <div class="period-delta-grid">
+      ${deltaCard('👁 Показы (итого)', kpisA?.totalViews, kpisB?.totalViews, fmt)}
+      ${deltaCard('👁 Показы (ср/день)', kpisA?.avgViews, kpisB?.avgViews, fmt)}
+      ${deltaCard('📞 Контакты (итого)', kpisA?.totalContacts, kpisB?.totalContacts, fmt)}
+      ${deltaCard('📞 Контакты (ср/день)', kpisA?.avgContacts, kpisB?.avgContacts, fmt)}
+      ${deltaCard('⭐ Избранное (итого)', kpisA?.totalFavorites, kpisB?.totalFavorites, fmt)}
+      ${deltaCard('🎯 Конверсия', convA, convB, fmtPct)}
+    </div>
+
+    <div class="chart-card" style="margin-bottom:16px;">
+      <div class="chart-card-title">Наложение периодов (нормализовано по дням)</div>
+      <div class="chart-wrap chart-wrap-tall"><canvas id="periodOverlayChart"></canvas></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      ${(notesA || notesB) ? `
+      <div class="chart-card">
+        <div class="chart-card-title">📝 Заметки — Период A</div>
+        ${notesA || '<div style="color:var(--text3);font-size:13px;padding:8px 0;">Нет заметок</div>'}
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">📝 Заметки — Период B</div>
+        ${notesB || '<div style="color:var(--text3);font-size:13px;padding:8px 0;">Нет заметок</div>'}
+      </div>` : ''}
+    </div>`;
+
+  // Overlay chart: normalize both periods to day index 0,1,2...
+  destroyChart(periodChartOverlay);
+  const maxLen = Math.max(statsA.length, statsB.length);
+  const dayLabels = Array.from({length: maxLen}, (_,i) => `День ${i+1}`);
+
+  periodChartOverlay = new Chart(document.getElementById('periodOverlayChart'), {
+    type: 'line',
+    data: {
+      labels: dayLabels,
+      datasets: [
+        { label: `A: Показы (${formatDateShort(fromA)}–${formatDateShort(toA)})`, data: statsA.map(s=>s.views), borderColor:'#00c896', backgroundColor:'#00c89620', borderWidth:2, tension:0.3, pointRadius:statsA.length>60?0:3, spanGaps:true },
+        { label: `B: Показы (${formatDateShort(fromB)}–${formatDateShort(toB)})`, data: statsB.map(s=>s.views), borderColor:'#4a9eff', backgroundColor:'#4a9eff20', borderWidth:2, tension:0.3, pointRadius:statsB.length>60?0:3, borderDash:[5,3], spanGaps:true },
+        { label: `A: Контакты`, data: statsA.map(s=>s.contacts), borderColor:'#00c896', borderWidth:1.5, tension:0.3, pointRadius:0, borderDash:[2,2], spanGaps:true },
+        { label: `B: Контакты`, data: statsB.map(s=>s.contacts), borderColor:'#4a9eff', borderWidth:1.5, tension:0.3, pointRadius:0, borderDash:[5,3,2,3], spanGaps:true },
+      ],
+    },
+    options: { ...chartOptions(), plugins: { ...chartOptions().plugins, legend:{ display:true, labels:{color:'#9090a0',boxWidth:10,padding:10,usePointStyle:true} } } },
+  });
+}
+
+// ─── CROSS-REGION ───
+let crossChart1 = null, crossChart2 = null;
+let crossSelectedRegions = new Set();
+let crossPeriod = 30;
+
+function initCrossRegionPage() {
+  const container = document.getElementById('crossRegionChecks');
+  if (!container) return;
+  // Select all regions by default on first load
+  if (crossSelectedRegions.size === 0) {
+    state.regions.forEach(r => crossSelectedRegions.add(r.id));
+  }
+  container.innerHTML = state.regions.map((r,i) => {
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    const sel = crossSelectedRegions.has(r.id);
+    return `<label class="cross-region-check ${sel?'selected':''}" style="${sel?'border-color:'+color+';background:'+color+'18':''}" >
+      <input type="checkbox" style="display:none" ${sel?'checked':''} onchange="toggleCrossRegion('${r.id}',${i},this)">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+      ${esc(r.name)}
+    </label>`;
+  }).join('');
+  renderCrossRegion();
+}
+
+function toggleCrossRegion(id, idx, checkbox) {
+  const label = checkbox.closest('.cross-region-check');
+  const color = CHART_COLORS[idx % CHART_COLORS.length];
+  if (checkbox.checked) { crossSelectedRegions.add(id); label.classList.add('selected'); label.style.borderColor=color; label.style.background=color+'18'; }
+  else { crossSelectedRegions.delete(id); label.classList.remove('selected'); label.style.borderColor=''; label.style.background=''; }
+  renderCrossRegion();
+}
+
+function setCrossPeriod(days, btn) {
+  crossPeriod = days;
+  document.querySelectorAll('#crossPeriodTabs .period-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCrossRegion();
+}
+
+function renderCrossRegion() {
+  const content = document.getElementById('crossContent');
+  const metric = document.getElementById('crossMetric').value;
+  const groupBy = document.getElementById('crossGroupBy').value;
+
+  if (crossSelectedRegions.size === 0) {
+    content.innerHTML = `<div class="empty-state"><h3>Выберите регионы</h3></div>`;
+    return;
+  }
+
+  const { from, to } = getDateRange(crossPeriod);
+  const selectedRegions = state.regions.filter(r => crossSelectedRegions.has(r.id));
+
+  // Build per-region data
+  const regionData = selectedRegions.map((r, i) => {
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    const listings = r.listings || [];
+    const allStats = [];
+    listings.forEach(l => {
+      const filtered = filterStatsByPeriod(l.stats||[], crossPeriod, from, to);
+      filtered.forEach(s => allStats.push({ ...s, listingId: l.id, listingTitle: l.title }));
+    });
+    // Aggregate by date
+    const byDate = {};
+    allStats.forEach(s => {
+      if (!byDate[s.date]) byDate[s.date] = { views:0, contacts:0, favorites:0, count:0 };
+      byDate[s.date].views += s.views || 0;
+      byDate[s.date].contacts += s.contacts || 0;
+      byDate[s.date].favorites += s.favorites || 0;
+      byDate[s.date].count++;
+    });
+    const aggregated = Object.entries(byDate).map(([date, v]) => ({
+      date, views: v.views, contacts: v.contacts, favorites: v.favorites,
+      convRate: v.views > 0 ? +(v.contacts/v.views*100).toFixed(2) : 0,
+    })).sort((a,b)=>a.date.localeCompare(b.date));
+
+    const totalViews = aggregated.reduce((s,x)=>s+x.views,0);
+    const totalContacts = aggregated.reduce((s,x)=>s+x.contacts,0);
+    const totalFavorites = aggregated.reduce((s,x)=>s+x.favorites,0);
+    const convRate = totalViews > 0 ? (totalContacts/totalViews*100) : 0;
+    const metricTotal = metric==='convRate' ? +convRate.toFixed(1) : metric==='views' ? totalViews : metric==='contacts' ? totalContacts : totalFavorites;
+
+    return { region: r, color, aggregated, listings, allStats,
+      totals: { views: totalViews, contacts: totalContacts, favorites: totalFavorites, convRate: +convRate.toFixed(1) },
+      metricTotal };
+  });
+
+  const metricLabel = { views:'Показы', contacts:'Контакты', favorites:'Избранное', convRate:'Конверсия %' }[metric];
+  document.getElementById('crossSub').textContent = `${selectedRegions.length} ${plural(selectedRegions.length,'регион','региона','регионов')} · ${metricLabel}`;
+
+  destroyChart(crossChart1); destroyChart(crossChart2);
+
+  if (groupBy === 'region') {
+    // Bar chart: one bar per region
+    const labels = regionData.map(d=>d.region.name);
+    const values = regionData.map(d=>d.metricTotal);
+    const colors = regionData.map(d=>d.color+'cc');
+
+    // Summary table with all metrics
+    const tableRows = regionData.map(({region,color,totals,listings,allStats})=>{
+      const daysWithData = new Set(allStats.map(s=>s.date)).size;
+      return `<div class="cross-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;">
+        <div style="font-weight:500;color:var(--text);display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>${esc(region.name)}
+          <span style="font-size:11px;color:var(--text3);">(${listings.length} объявл.)</span>
+        </div>
+        <div style="font-family:var(--mono);color:var(--text2);">${totals.views.toLocaleString('ru-RU')}</div>
+        <div style="font-family:var(--mono);color:var(--text2);">${totals.contacts.toLocaleString('ru-RU')}</div>
+        <div style="font-family:var(--mono);color:var(--text2);">${totals.favorites.toLocaleString('ru-RU')}</div>
+        <div style="font-family:var(--mono);color:var(--accent);">${totals.convRate}%</div>
+        <div style="font-family:var(--mono);color:var(--text3);">${daysWithData} дн.</div>
+      </div>`;
+    }).join('');
+
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div class="chart-card">
+          <div class="chart-card-title">${metricLabel} по регионам</div>
+          <div class="chart-wrap"><canvas id="crossBar"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Распределение метрик</div>
+          <div class="chart-wrap"><canvas id="crossPie"></canvas></div>
+        </div>
+      </div>
+      <div class="cross-table">
+        <div class="cross-row cross-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;">
+          <div>Регион</div><div>Показы</div><div>Контакты</div><div>Избранное</div><div>Конверсия</div><div>Дней данных</div>
+        </div>
+        ${tableRows}
+      </div>`;
+
+    crossChart1 = new Chart(document.getElementById('crossBar'), {
+      type: 'bar',
+      data: { labels, datasets: [{ label: metricLabel, data: values, backgroundColor: colors, borderRadius:6, borderSkipped:false }] },
+      options: chartOptions(),
+    });
+    crossChart2 = new Chart(document.getElementById('crossPie'), {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'right', labels: { color:'#9090a0', boxWidth:10, padding:12 } },
+          tooltip: { backgroundColor:'#1e1e24', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#f0f0f2', bodyColor:'#9090a0', padding:10, cornerRadius:8 },
+        },
+      },
+    });
+
+  } else if (groupBy === 'listing') {
+    // All listings from all selected regions on one bar chart
+    const allListings = [];
+    regionData.forEach(({region, color, listings, allStats}) => {
+      listings.forEach(l => {
+        const ls = filterStatsByPeriod(l.stats||[], crossPeriod, from, to);
+        const kpis = calcKPIs(ls);
+        if (!kpis) return;
+        const val = metric==='convRate' ? (kpis.totalViews>0?(kpis.totalContacts/kpis.totalViews*100):0)
+          : kpis[`total${metric.charAt(0).toUpperCase()+metric.slice(1)}`] || 0;
+        allListings.push({ label: l.title + ' (' + region.name + ')', val: +val.toFixed(metric==='convRate'?1:0), color });
+      });
+    });
+    allListings.sort((a,b)=>b.val-a.val);
+
+    content.innerHTML = `<div class="chart-card">
+      <div class="chart-card-title">${metricLabel} по объявлениям (все регионы)</div>
+      <div class="chart-wrap" style="height:${Math.max(260, allListings.length*32)}px;"><canvas id="crossBar"></canvas></div>
+    </div>`;
+
+    crossChart1 = new Chart(document.getElementById('crossBar'), {
+      type: 'bar',
+      data: {
+        labels: allListings.map(x=>x.label.length>30?x.label.slice(0,30)+'…':x.label),
+        datasets: [{ label: metricLabel, data: allListings.map(x=>x.val), backgroundColor: allListings.map(x=>x.color+'cc'), borderRadius:4, borderSkipped:false }],
+      },
+      options: { ...chartOptions(), indexAxis:'y', plugins:{ ...chartOptions().plugins, legend:{display:false} } },
+    });
+
+  } else {
+    // Timeline: one line per region, aggregated by day
+    const allDatesSet = new Set();
+    regionData.forEach(({aggregated}) => aggregated.forEach(s=>allDatesSet.add(s.date)));
+    const allDates = [...allDatesSet].sort();
+    const labels = allDates.map(d=>formatDateShort(d));
+
+    const datasets = regionData.map(({region, color, aggregated}) => {
+      const map = {};
+      aggregated.forEach(s => map[s.date] = metric==='convRate' ? s.convRate : s[metric]);
+      return {
+        label: region.name,
+        data: allDates.map(d=>map[d]??null),
+        borderColor: color, backgroundColor: color+'18',
+        borderWidth: 2, tension: 0.3,
+        pointRadius: allDates.length>60?0:3,
+        spanGaps: true,
+      };
+    });
+
+    content.innerHTML = `<div class="chart-card">
+      <div class="chart-card-title">Динамика: ${metricLabel} по регионам</div>
+      <div class="chart-wrap chart-wrap-tall"><canvas id="crossLine"></canvas></div>
+    </div>`;
+
+    crossChart1 = new Chart(document.getElementById('crossLine'), {
+      type: 'line',
+      data: { labels, datasets },
+      options: { ...chartOptions(), plugins: { ...chartOptions().plugins, legend:{ display:true, labels:{color:'#9090a0',boxWidth:10,padding:12,usePointStyle:true} } } },
+    });
+  }
+}
+
+
+function onInputChange(listingId, field, el) {
+  el.classList.toggle('filled', el.value !== '');
+}
+
+function inputKeyNav(e, listingId, field) {
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    const order = ['views','contacts','favorites'];
+    const region = getCurrentRegion();
+    const listings = region.listings;
+    const curIdx = order.indexOf(field);
+    if (curIdx < order.length - 1) {
+      e.preventDefault();
+      document.getElementById(`inp_${listingId}_${order[curIdx + 1]}`)?.focus();
+    } else {
+      // move to next listing
+      const lIdx = listings.findIndex(l => l.id === listingId);
+      if (lIdx < listings.length - 1) {
+        e.preventDefault();
+        document.getElementById(`inp_${listings[lIdx+1].id}_views`)?.focus();
+      }
+    }
+  }
+}
+
+function saveStat(listingId) {
+  const region = getCurrentRegion();
+  const listing = region.listings.find(l => l.id === listingId);
+  if (!listing) return;
+  const date = document.getElementById('inputDate').value || todayStr();
+
+  const views = document.getElementById(`inp_${listingId}_views`)?.value;
+  const contacts = document.getElementById(`inp_${listingId}_contacts`)?.value;
+  const favorites = document.getElementById(`inp_${listingId}_favorites`)?.value;
+  const note = document.getElementById(`inp_${listingId}_note`)?.value.trim() || '';
+
+  if (views === '' && contacts === '' && favorites === '' && !note) {
+    showToast('Введите хотя бы одно значение');
+    return;
+  }
+
+  if (!listing.stats) listing.stats = [];
+  const existing = listing.stats.find(s => s.date === date);
+  const entry = {
+    date,
+    views: views !== '' ? +views : null,
+    contacts: contacts !== '' ? +contacts : null,
+    favorites: favorites !== '' ? +favorites : null,
+    note,
+  };
+
+  if (existing) Object.assign(existing, entry);
+  else listing.stats.push(entry);
+
+  saveState();
+  renderListings();
+
+  // show saved badge
+  const badge = document.getElementById(`saved_${listingId}`);
+  const card = document.getElementById(`card_${listingId}`);
+  if (badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 2000); }
+  if (card) card.classList.add('has-data');
+}
+
+function saveAllStats() {
+  const region = getCurrentRegion();
+  if (!region) return;
+  let saved = 0;
+  region.listings.forEach(l => {
+    const views = document.getElementById(`inp_${l.id}_views`)?.value;
+    const contacts = document.getElementById(`inp_${l.id}_contacts`)?.value;
+    const favorites = document.getElementById(`inp_${l.id}_favorites`)?.value;
+    if (views !== '' || contacts !== '' || favorites !== '') {
+      saveStat(l.id);
+      saved++;
+    }
+  });
+  if (saved > 0) showToast(`Сохранено ${plural(saved,'запись','записи','записей')}`);
+  else showToast('Нет данных для сохранения');
+}
+
+// ─── STEP 2: PROMOTIONS ───
+
+const PROMO_TYPES = { x2: '×2', x5: '×5', x10: '×10' };
+
+function initPromoModal() {
+  const region = getCurrentRegion();
+  if (!region) return;
+
+  // fill listing select
+  const sel = document.getElementById('promoListingId');
+  sel.innerHTML = region.listings.map(l =>
+    `<option value="${l.id}">${esc(l.title)}${l.avitoId ? ' (#'+esc(l.avitoId)+')' : ''}</option>`
+  ).join('');
+
+  // default date to today
+  const dateEl = document.getElementById('promoStartDate');
+  if (!dateEl.value) dateEl.value = todayStr();
+
+  // reset selections
+  document.querySelectorAll('.promo-type-btn, .promo-dur-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('promoPreview').style.display = 'none';
+  document.getElementById('promoCost').value = '';
+  document.getElementById('promoNote').value = '';
+}
+
+// promo type/dur button toggle
+document.addEventListener('click', e => {
+  const typeBtn = e.target.closest('.promo-type-btn');
+  const durBtn = e.target.closest('.promo-dur-btn');
+  if (typeBtn) {
+    document.querySelectorAll('.promo-type-btn').forEach(b => b.classList.remove('selected'));
+    typeBtn.classList.add('selected');
+    typeBtn.querySelector('input').checked = true;
+    updatePromoPreview();
+  }
+  if (durBtn) {
+    document.querySelectorAll('.promo-dur-btn').forEach(b => b.classList.remove('selected'));
+    durBtn.classList.add('selected');
+    durBtn.querySelector('input').checked = true;
+    updatePromoPreview();
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'promoCost' || e.target.id === 'promoStartDate') updatePromoPreview();
+});
+
+function updatePromoPreview() {
+  const typeEl = document.querySelector('.promo-type-btn.selected');
+  const durEl = document.querySelector('.promo-dur-btn.selected');
+  const cost = document.getElementById('promoCost')?.value;
+  const startDate = document.getElementById('promoStartDate')?.value;
+  const preview = document.getElementById('promoPreview');
+  if (!preview) return;
+
+  if (typeEl && durEl && startDate) {
+    const dur = +durEl.dataset.val;
+    const endDate = shiftDate(startDate, dur);
+    const costStr = cost ? `${(+cost).toLocaleString('ru-RU')} ₽` : 'стоимость не указана';
+    preview.style.display = 'block';
+    preview.innerHTML = `
+      <strong style="color:var(--text);font-size:13px;">Итог:</strong>
+      Продвижение <strong style="color:var(--accent)">${typeEl.querySelector('span').textContent}</strong>
+      на <strong style="color:var(--accent)">${dur === 1 ? '1 день' : '7 дней'}</strong>
+      с ${formatDateRu(startDate)} по ${formatDateRu(endDate)} · ${costStr}`;
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function addPromo() {
+  const listingId = document.getElementById('promoListingId').value;
+  const typeEl = document.querySelector('.promo-type-btn.selected');
+  const durEl = document.querySelector('.promo-dur-btn.selected');
+  const startDate = document.getElementById('promoStartDate').value;
+  const cost = document.getElementById('promoCost').value;
+  const note = document.getElementById('promoNote').value.trim();
+
+  if (!listingId) { showToast('Выберите объявление'); return; }
+  if (!typeEl) { showToast('Выберите тип продвижения'); return; }
+  if (!durEl) { showToast('Выберите срок'); return; }
+  if (!startDate) { showToast('Укажите дату начала'); return; }
+
+  const region = getCurrentRegion();
+  const listing = region.listings.find(l => l.id === listingId);
+  if (!listing) return;
+
+  if (!listing.promotions) listing.promotions = [];
+  listing.promotions.push({
+    id: 'p' + Date.now(),
+    type: typeEl.dataset.val,
+    duration: +durEl.dataset.val,
+    startDate,
+    endDate: shiftDate(startDate, +durEl.dataset.val),
+    cost: cost !== '' ? +cost : null,
+    note,
+    createdAt: new Date().toISOString(),
+  });
+
+  saveState();
+  renderPromos();
+  renderListings();
+  closeModal('addPromoModal');
+  showToast('Продвижение добавлено');
+}
+
+function deletePromo(listingId, promoId) {
+  const region = getCurrentRegion();
+  const listing = region.listings.find(l => l.id === listingId);
+  if (!listing) return;
+  listing.promotions = listing.promotions.filter(p => p.id !== promoId);
+  saveState();
+  renderPromos();
+  renderListings();
+  showToast('Продвижение удалено');
+}
+
+function getPromoStatus(promo) {
+  const today = todayStr();
+  if (promo.endDate <= today) return 'ended';
+  if (promo.startDate > today) return 'future';
+  return 'active';
+}
+
+function renderPromos() {
+  const region = getCurrentRegion();
+  const container = document.getElementById('promosContainer');
+  const sub = document.getElementById('promoSub');
+  const filterListing = document.getElementById('promoFilterListing');
+  const filterType = document.getElementById('promoFilterType');
+
+  if (!region) return;
+
+  // fill listing filter
+  const prevVal = filterListing.value;
+  filterListing.innerHTML = `<option value="">Все объявления</option>` +
+    region.listings.map(l => `<option value="${l.id}" ${prevVal === l.id ? 'selected' : ''}>${esc(l.title)}</option>`).join('');
+
+  // collect all promos
+  let allPromos = [];
+  region.listings.forEach(l => {
+    (l.promotions || []).forEach(p => {
+      allPromos.push({ ...p, listing: l });
+    });
+  });
+
+  // filter
+  if (filterListing.value) allPromos = allPromos.filter(p => p.listing.id === filterListing.value);
+  if (filterType.value) allPromos = allPromos.filter(p => p.type === filterType.value);
+
+  // sort by date desc
+  allPromos.sort((a, b) => b.startDate.localeCompare(a.startDate));
+
+  const totalCost = allPromos.reduce((s, p) => s + (p.cost || 0), 0);
+  sub.textContent = `${allPromos.length} ${plural(allPromos.length,'продвижение','продвижения','продвижений')} · итого ${totalCost.toLocaleString('ru-RU')} ₽`;
+
+  // active banner
+  const activePromos = allPromos.filter(p => getPromoStatus(p) === 'active');
+  const bannerEl = document.getElementById('promoActiveBanner');
+  if (activePromos.length > 0) {
+    bannerEl.innerHTML = `<div class="active-promo-banner">
+      <span style="font-size:13px;font-weight:600;color:var(--amber);">⚡ Активные прямо сейчас:</span>
+      ${activePromos.map(p => `
+        <div class="active-promo-item">
+          <span class="promo-type-badge promo-type-${p.type}">${PROMO_TYPES[p.type]}</span>
+          <strong>${esc(p.listing.title)}</strong>
+          <span style="color:var(--text3)">до ${formatDateRu(p.endDate)}</span>
+        </div>`).join('')}
+    </div>`;
+  } else {
+    bannerEl.innerHTML = '';
+  }
+
+  if (allPromos.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+      <h3>Нет продвижений</h3>
+      <p>Добавьте первое продвижение, чтобы отслеживать его эффективность</p>
+      <button class="btn btn-primary" onclick="openModal('addPromoModal');initPromoModal()">Добавить продвижение</button>
+    </div>`;
+    return;
+  }
+
+  const STATUS_LABELS = {
+    active: `<span class="promo-status-active">● Активно</span>`,
+    ended: `<span class="promo-status-ended">Завершено</span>`,
+    future: `<span class="promo-status-future">◌ Запланировано</span>`,
+  };
+
+  container.innerHTML = `
+    <div class="promos-table">
+      <div class="promos-table-header">
+        <div>Объявление</div>
+        <div>Тип</div>
+        <div>Срок</div>
+        <div>Начало</div>
+        <div>Конец</div>
+        <div>Статус / ₽</div>
+        <div></div>
+      </div>
+      ${allPromos.map(p => {
+        const status = getPromoStatus(p);
+        return `<div class="promo-row">
+          <div class="promo-listing-name">
+            ${esc(p.listing.title)}
+            ${p.note ? `<small>${esc(p.note)}</small>` : ''}
+          </div>
+          <div><span class="promo-type-badge promo-type-${p.type}">${PROMO_TYPES[p.type]}</span></div>
+          <div style="color:var(--text2)">${p.duration === 1 ? '1 день' : '7 дней'}</div>
+          <div style="color:var(--text2);font-size:12px;">${formatDateRu(p.startDate)}</div>
+          <div style="color:var(--text2);font-size:12px;">${formatDateRu(p.endDate)}</div>
+          <div>
+            ${STATUS_LABELS[status]}
+            ${p.cost ? `<div style="font-family:var(--mono);font-size:12px;color:var(--text3);margin-top:2px;">${p.cost.toLocaleString('ru-RU')} ₽</div>` : ''}
+          </div>
+          <div>
+            <button class="icon-btn danger" onclick="deletePromo('${p.listing.id}','${p.id}')" title="Удалить">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+
+// ─── STEP 3: STATS & CHARTS ───
+
+const CHART_COLORS = ['#00c896','#4a9eff','#f0a020','#ff5a5a','#a78bfa','#34d399','#fb923c','#f472b6'];
+const METRIC_COLORS = { views: '#00c896', contacts: '#4a9eff', favorites: '#f0a020' };
+const METRIC_LABELS = { views: 'Показы', contacts: 'Контакты', favorites: 'Избранное' };
+
+let statsChart = null;
+let statsBarChart2 = null;
+let statsPeriod = 7;
+let statsActiveMetrics = new Set(['views','contacts','favorites']);
+let compareChart = null;
+let comparePeriod = 30;
+let compareSelectedListings = new Set();
+
+function initChartDefaults() {
+  if (!window.Chart) return;
+  Chart.defaults.color = '#606070';
+  Chart.defaults.font.family = "'Golos Text', sans-serif";
+  Chart.defaults.font.size = 12;
+}
+
+function getDateRange(periodDays) {
+  const to = todayStr();
+  if (periodDays === 0) return { from: null, to };
+  const from = shiftDate(to, -periodDays + 1);
+  return { from, to };
+}
+
+function filterStatsByPeriod(stats, periodDays, fromOverride, toOverride) {
+  let from = fromOverride, to = toOverride;
+  if (!from && !to && periodDays !== -1) {
+    const r = getDateRange(periodDays);
+    from = r.from; to = r.to;
+  }
+  if (!from) return [...stats].sort((a,b) => a.date.localeCompare(b.date));
+  return stats.filter(s => s.date >= from && (!to || s.date <= to)).sort((a,b) => a.date.localeCompare(b.date));
+}
+
+function fillDateGaps(stats, from, to) {
+  if (!from || !to) return stats;
+  const map = {};
+  stats.forEach(s => map[s.date] = s);
+  const result = [];
+  let cur = from;
+  while (cur <= to) {
+    result.push(map[cur] || { date: cur, views: null, contacts: null, favorites: null });
+    cur = shiftDate(cur, 1);
+  }
+  return result;
+}
+
+function calcKPIs(stats) {
+  const filtered = stats.filter(s => s && s.views !== null);
+  if (filtered.length === 0) return null;
+  const sum = k => filtered.reduce((s,x) => s + (x[k] || 0), 0);
+  const avg = k => filtered.length ? Math.round(sum(k) / filtered.length) : 0;
+  const max = k => Math.max(...filtered.map(x => x[k] || 0));
+  const half = Math.floor(filtered.length / 2);
+  const firstHalf = filtered.slice(0, half);
+  const secondHalf = filtered.slice(half);
+  const avgF = (arr, k) => arr.length ? arr.reduce((s,x)=>s+(x[k]||0),0)/arr.length : 0;
+  const delta = k => { const f=avgF(firstHalf,k),s=avgF(secondHalf,k); if(f===0)return null; return Math.round(((s-f)/f)*100); };
+  return {
+    totalViews:sum('views'),avgViews:avg('views'),maxViews:max('views'),deltaViews:delta('views'),
+    totalContacts:sum('contacts'),avgContacts:avg('contacts'),maxContacts:max('contacts'),deltaContacts:delta('contacts'),
+    totalFavorites:sum('favorites'),avgFavorites:avg('favorites'),maxFavorites:max('favorites'),deltaFavorites:delta('favorites'),
+    days:filtered.length,
+  };
+}
+
+function deltaHtml(val) {
+  if (val === null) return `<span class="kpi-delta flat">—</span>`;
+  if (val > 0) return `<span class="kpi-delta up">↑ ${val}%</span>`;
+  if (val < 0) return `<span class="kpi-delta down">↓ ${Math.abs(val)}%</span>`;
+  return `<span class="kpi-delta flat">→ 0%</span>`;
+}
+
+function initStatsPage() {
+  const region = getCurrentRegion();
+  const sel = document.getElementById('statsListing');
+  const prev = sel.value;
+  sel.innerHTML = `<option value="">Выберите объявление</option>` +
+    (region?.listings || []).map(l => `<option value="${l.id}" ${l.id===prev?'selected':''}>${esc(l.title)}</option>`).join('');
+  if (!document.getElementById('statsDateFrom').value) {
+    const today = todayStr();
+    document.getElementById('statsDateFrom').value = shiftDate(today, -6);
+    document.getElementById('statsDateTo').value = today;
+  }
+}
+
+function setStatsPeriod(days, btn) {
+  statsPeriod = days;
+  document.querySelectorAll('#statsPeriodTabs .period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (days > 0) {
+    const today = todayStr();
+    document.getElementById('statsDateFrom').value = shiftDate(today, -days+1);
+    document.getElementById('statsDateTo').value = today;
+  }
+  renderStats();
+}
+
+function setStatsPeriodCustom() {
+  document.querySelectorAll('#statsPeriodTabs .period-tab').forEach(b => b.classList.remove('active'));
+  statsPeriod = -1;
+  renderStats();
+}
+
+function toggleMetric(metric, btn) {
+  if (statsActiveMetrics.has(metric)) {
+    if (statsActiveMetrics.size === 1) return;
+    statsActiveMetrics.delete(metric);
+    btn.classList.remove('active');
+  } else {
+    statsActiveMetrics.add(metric);
+    btn.classList.add('active');
+  }
+  renderStats();
+}
+
+function renderStats() {
+  const region = getCurrentRegion();
+  const listingId = document.getElementById('statsListing').value;
+  const content = document.getElementById('statsContent');
+  if (!listingId) {
+    destroyChart(statsChart); destroyChart(statsBarChart2);
+    content.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 17l4-8 4 5 3-4 4 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 20h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><h3>Выберите объявление</h3><p>Выберите объявление из списка выше</p></div>`;
+    return;
+  }
+  const listing = region.listings.find(l => l.id === listingId);
+  if (!listing || !listing.stats || listing.stats.length === 0) {
+    content.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 17l4-8 4 5 3-4 4 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 20h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><h3>Нет данных</h3><p>Данные ещё не вводились для этого объявления</p><button class="btn btn-primary" onclick="navigate('input')">Ввести данные</button></div>`;
+    return;
+  }
+  const fromEl = statsPeriod === -1 ? document.getElementById('statsDateFrom').value : null;
+  const toEl = statsPeriod === -1 ? document.getElementById('statsDateTo').value : null;
+  let filteredStats = filterStatsByPeriod(listing.stats, statsPeriod === -1 ? 0 : statsPeriod, fromEl, toEl);
+  const from = filteredStats.length ? filteredStats[0].date : (fromEl || todayStr());
+  const to = filteredStats.length ? filteredStats[filteredStats.length-1].date : (toEl || todayStr());
+  const filled = fillDateGaps(filteredStats, from, to);
+  const kpis = calcKPIs(filteredStats);
+  document.getElementById('statsSub').textContent = `${listing.title} · ${filteredStats.length} ${plural(filteredStats.length,'запись','записи','записей')}`;
+
+  content.innerHTML = `
+    <div class="stats-kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">👁 Показы</div>
+        <div class="kpi-value">${kpis ? kpis.totalViews.toLocaleString('ru-RU') : '—'}</div>
+        <div style="font-size:12px;color:var(--text3)">ср. ${kpis?.avgViews ?? '—'}/день · макс ${kpis?.maxViews ?? '—'}</div>
+        ${kpis ? deltaHtml(kpis.deltaViews) : ''}
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">📞 Контакты</div>
+        <div class="kpi-value">${kpis ? kpis.totalContacts.toLocaleString('ru-RU') : '—'}</div>
+        <div style="font-size:12px;color:var(--text3)">ср. ${kpis?.avgContacts ?? '—'}/день · макс ${kpis?.maxContacts ?? '—'}</div>
+        ${kpis ? deltaHtml(kpis.deltaContacts) : ''}
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">⭐ Избранное</div>
+        <div class="kpi-value">${kpis ? kpis.totalFavorites.toLocaleString('ru-RU') : '—'}</div>
+        <div style="font-size:12px;color:var(--text3)">ср. ${kpis?.avgFavorites ?? '—'}/день · макс ${kpis?.maxFavorites ?? '—'}</div>
+        ${kpis ? deltaHtml(kpis.deltaFavorites) : ''}
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">📊 Конверсия</div>
+        <div class="kpi-value" style="font-size:18px;">${kpis && kpis.totalViews > 0 ? ((kpis.totalContacts/kpis.totalViews)*100).toFixed(1)+'%' : '—'}</div>
+        <div style="font-size:12px;color:var(--text3)">показ → контакт</div>
+        <div style="font-size:12px;color:var(--text3)">${kpis && kpis.totalViews > 0 ? ((kpis.totalFavorites/kpis.totalViews)*100).toFixed(1)+'%' : '—'} показ → избр.</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Динамика по дням</div>
+      <div class="chart-wrap"><canvas id="statsLineChart"></canvas></div>
+    </div>
+    ${filteredStats.filter(s=>s.note).length > 0 ? `
+    <div class="chart-card" style="margin-bottom:16px;">
+      <div class="chart-card-title">📝 Заметки за период</div>
+      ${filteredStats.filter(s=>s.note).map(s=>`
+        <div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="color:var(--accent);font-family:var(--mono);font-size:12px;flex-shrink:0;min-width:60px;">${formatDateShort(s.date)}</span>
+          <span style="color:var(--text2);">${esc(s.note)}</span>
+        </div>`).join('')}
+    </div>` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="chart-card">
+        <div class="chart-card-title">Среднее по неделям</div>
+        <div class="chart-wrap"><canvas id="statsWeekChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Дни с продвижением vs без</div>
+        <div class="chart-wrap"><canvas id="statsPromoChart"></canvas></div>
+      </div>
+    </div>`;
+
+  // Line chart
+  destroyChart(statsChart);
+  const labels = filled.map(s => formatDateShort(s.date));
+  const datasets = [];
+  ['views','contacts','favorites'].forEach(m => {
+    if (!statsActiveMetrics.has(m)) return;
+    datasets.push({ label:METRIC_LABELS[m], data:filled.map(s=>s[m]), borderColor:METRIC_COLORS[m], backgroundColor:METRIC_COLORS[m]+'18', borderWidth:2, pointRadius:filled.length>60?0:3, pointHoverRadius:5, tension:0.3, fill:false, spanGaps:true });
+  });
+  statsChart = new Chart(document.getElementById('statsLineChart'), { type:'line', data:{ labels, datasets }, options:chartOptions() });
+
+  // Weekly bar
+  destroyChart(statsBarChart2);
+  const weeks = groupByWeek(filteredStats);
+  const wLabels = weeks.map(w=>w.label);
+  const wDs = [];
+  ['views','contacts','favorites'].forEach(m => {
+    if (!statsActiveMetrics.has(m)) return;
+    wDs.push({ label:METRIC_LABELS[m], data:weeks.map(w=>w.avg[m]), backgroundColor:METRIC_COLORS[m]+'cc', borderRadius:4, borderSkipped:false });
+  });
+  statsBarChart2 = new Chart(document.getElementById('statsWeekChart'), { type:'bar', data:{ labels:wLabels, datasets:wDs }, options:{...chartOptions(), plugins:{...chartOptions().plugins, legend:{ display:true, labels:{color:'#9090a0',boxWidth:10,padding:10}}}}});
+
+  // Promo comparison
+  const promoDates = new Set();
+  (listing.promotions||[]).forEach(p=>{ let d=p.startDate; while(d<=p.endDate){promoDates.add(d);d=shiftDate(d,1);} });
+  const promoS = filteredStats.filter(s=>promoDates.has(s.date)&&s.views!==null);
+  const normalS = filteredStats.filter(s=>!promoDates.has(s.date)&&s.views!==null);
+  const avgK = (arr,k) => arr.length ? Math.round(arr.reduce((s,x)=>s+(x[k]||0),0)/arr.length) : 0;
+  new Chart(document.getElementById('statsPromoChart'), { type:'bar',
+    data:{ labels:['Показы','Контакты','Избранное'], datasets:[
+      { label:'Без продвижения', data:[avgK(normalS,'views'),avgK(normalS,'contacts'),avgK(normalS,'favorites')], backgroundColor:'rgba(96,96,112,0.6)', borderRadius:4, borderSkipped:false },
+      { label:'С продвижением', data:[avgK(promoS,'views'),avgK(promoS,'contacts'),avgK(promoS,'favorites')], backgroundColor:'rgba(240,160,32,0.7)', borderRadius:4, borderSkipped:false },
+    ]},
+    options:{...chartOptions(), plugins:{...chartOptions().plugins, legend:{ display:true, labels:{color:'#9090a0',boxWidth:10,padding:10}}}},
+  });
+}
+
+function groupByWeek(stats) {
+  const weeks = {};
+  stats.forEach(s => {
+    const d = new Date(s.date);
+    const ws = new Date(d); ws.setDate(d.getDate()-d.getDay()+1);
+    const key = ws.toISOString().slice(0,10);
+    if (!weeks[key]) weeks[key] = { label:formatDateShort(key), items:[] };
+    weeks[key].items.push(s);
+  });
+  return Object.values(weeks).map(w => ({
+    label: w.label,
+    avg: {
+      views: w.items.length ? Math.round(w.items.reduce((s,x)=>s+(x.views||0),0)/w.items.length) : 0,
+      contacts: w.items.length ? Math.round(w.items.reduce((s,x)=>s+(x.contacts||0),0)/w.items.length) : 0,
+      favorites: w.items.length ? Math.round(w.items.reduce((s,x)=>s+(x.favorites||0),0)/w.items.length) : 0,
+    }
+  }));
+}
+
+function formatDateShort(str) {
+  if (!str) return '';
+  const [,m,d] = str.split('-');
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  return `${+d} ${months[+m-1]}`;
+}
+
+function chartOptions() {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ mode:'index', intersect:false },
+    plugins:{
+      legend:{display:false},
+      tooltip:{ backgroundColor:'#1e1e24', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#f0f0f2', bodyColor:'#9090a0', padding:10, cornerRadius:8 },
+    },
+    scales:{
+      x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#606070',maxTicksLimit:12}, border:{color:'rgba(255,255,255,0.07)'} },
+      y:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#606070'}, border:{color:'rgba(255,255,255,0.07)'}, beginAtZero:true },
+    },
+  };
+}
+
+function destroyChart(c) { if (c) { try { c.destroy(); } catch(e) {} } }
+
+// ─ Compare page ─
+function initComparePage() {
+  const region = getCurrentRegion();
+  const container = document.getElementById('compareListingChecks');
+  if (!container || !region) return;
+  container.innerHTML = (region.listings||[]).map((l,i) => {
+    const color = CHART_COLORS[i%CHART_COLORS.length];
+    const sel = compareSelectedListings.has(l.id);
+    return `<label class="compare-listing-check ${sel?'selected':''}" style="${sel?'border-color:'+color+';background:'+color+'18':''}">
+      <input type="checkbox" style="display:none" ${sel?'checked':''} onchange="toggleCompareListing('${l.id}',${i},this)">
+      <span class="compare-color-dot" style="background:${color}"></span>${esc(l.title)}
+    </label>`;
+  }).join('');
+}
+
+function toggleCompareListing(id, idx, checkbox) {
+  const label = checkbox.closest('.compare-listing-check');
+  const color = CHART_COLORS[idx%CHART_COLORS.length];
+  if (checkbox.checked) { compareSelectedListings.add(id); label.classList.add('selected'); label.style.borderColor=color; label.style.background=color+'18'; }
+  else { compareSelectedListings.delete(id); label.classList.remove('selected'); label.style.borderColor=''; label.style.background=''; }
+  renderCompare();
+}
+
+function setComparePeriod(days, btn) {
+  comparePeriod = days;
+  document.querySelectorAll('#compareFilters .period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCompare();
+}
+
+function renderCompare() {
+  const region = getCurrentRegion();
+  const content = document.getElementById('compareContent');
+  const metric = document.getElementById('compareMetric').value;
+  if (compareSelectedListings.size < 1) {
+    destroyChart(compareChart);
+    content.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="14" width="4" height="7" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="4" height="12" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="16" y="4" width="4" height="17" rx="1" stroke="currentColor" stroke-width="1.4"/></svg></div><h3>Выберите объявления</h3><p>Отметьте одно или более объявлений</p></div>`;
+    return;
+  }
+  const { from, to } = getDateRange(comparePeriod);
+  const allDatesSet = new Set();
+  const listingsData = [];
+  let idx = 0;
+  compareSelectedListings.forEach(id => {
+    const l = region.listings.find(l=>l.id===id);
+    if (!l) return;
+    const filtered = filterStatsByPeriod(l.stats||[], comparePeriod, from, to);
+    filtered.forEach(s=>allDatesSet.add(s.date));
+    listingsData.push({ listing:l, stats:filtered, color:CHART_COLORS[idx%CHART_COLORS.length] });
+    idx++;
+  });
+  const allDates = [...allDatesSet].sort();
+  const labels = allDates.map(d=>formatDateShort(d));
+  const lineDs = listingsData.map(({listing,stats,color}) => {
+    const map={}; stats.forEach(s=>map[s.date]=s[metric]);
+    return { label:listing.title, data:allDates.map(d=>map[d]??null), borderColor:color, backgroundColor:color+'18', borderWidth:2, pointRadius:allDates.length>60?0:3, tension:0.3, spanGaps:true };
+  });
+  const tableRows = listingsData.map(({listing,stats,color}) => {
+    const kpis = calcKPIs(stats);
+    const total = stats.reduce((s,x)=>s+(x[metric]||0),0);
+    const avgVal = kpis ? kpis[`avg${metric.charAt(0).toUpperCase()+metric.slice(1)}`] : '—';
+    const maxVal = kpis ? kpis[`max${metric.charAt(0).toUpperCase()+metric.slice(1)}`] : '—';
+    return `<tr><td style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:500;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:8px;vertical-align:middle;"></span>${esc(listing.title)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);text-align:right;color:var(--text)">${total.toLocaleString('ru-RU')}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);text-align:right;color:var(--text2)">${avgVal}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);text-align:right;color:var(--text2)">${maxVal}</td></tr>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-card-title">Динамика: ${METRIC_LABELS[metric]}</div>
+      <div class="chart-wrap chart-wrap-tall"><canvas id="compareLineChart"></canvas></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div class="chart-card">
+        <div class="chart-card-title">Итого за период</div>
+        <div class="chart-wrap"><canvas id="compareBarChart"></canvas></div>
+      </div>
+      <div class="chart-card" style="overflow:auto;">
+        <div class="chart-card-title">Таблица</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;">
+            <th style="padding:8px 14px;text-align:left;border-bottom:1px solid var(--border);">Объявление</th>
+            <th style="padding:8px 14px;text-align:right;border-bottom:1px solid var(--border);">Всего</th>
+            <th style="padding:8px 14px;text-align:right;border-bottom:1px solid var(--border);">Ср./день</th>
+            <th style="padding:8px 14px;text-align:right;border-bottom:1px solid var(--border);">Макс.</th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  destroyChart(compareChart);
+  compareChart = new Chart(document.getElementById('compareLineChart'), {
+    type:'line', data:{ labels, datasets:lineDs },
+    options:{...chartOptions(), plugins:{...chartOptions().plugins, legend:{ display:true, labels:{color:'#9090a0',boxWidth:10,padding:12,usePointStyle:true}}}},
+  });
+  new Chart(document.getElementById('compareBarChart'), {
+    type:'bar',
+    data:{ labels:listingsData.map(({listing})=>listing.title.length>18?listing.title.slice(0,18)+'…':listing.title), datasets:[{ label:METRIC_LABELS[metric], data:listingsData.map(({stats})=>stats.reduce((s,x)=>s+(x[metric]||0),0)), backgroundColor:listingsData.map(({color})=>color+'cc'), borderRadius:6, borderSkipped:false }]},
+    options:chartOptions(),
+  });
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function plural(n, one, few, many) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 19) return `${n} ${many}`;
+  if (mod10 === 1) return `${n} ${one}`;
+  if (mod10 >= 2 && mod10 <= 4) return `${n} ${few}`;
+  return `${n} ${many}`;
+}
+
+// ─── STEP 4: ANALYTICS ───
+
+let analyticsPeriod = 30;
+let analyticsChart1 = null;
+let analyticsChart2 = null;
+
+function setAnalyticsPeriod(days, btn) {
+  analyticsPeriod = days;
+  document.querySelectorAll('#analyticsPeriodTabs .period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  const region = getCurrentRegion();
+  const content = document.getElementById('analyticsContent');
+  if (!region) return;
+
+  const allListings = region.listings || [];
+  if (allListings.length === 0) {
+    content.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      <h3>Нет данных</h3><p>Добавьте объявления и начните вводить ежедневные данные</p>
+      <button class="btn btn-primary" onclick="navigate('listings')">К объявлениям</button>
+    </div>`;
+    return;
+  }
+
+  const { from, to } = getDateRange(analyticsPeriod);
+
+  // ── Собираем данные по каждому объявлению ──
+  const listingStats = allListings.map((l, idx) => {
+    const filtered = filterStatsByPeriod(l.stats || [], analyticsPeriod, from, to);
+    const kpis = calcKPIs(filtered);
+    const totalCost = (l.promotions || [])
+      .filter(p => !from || (p.endDate >= from && p.startDate <= to))
+      .reduce((s, p) => s + (p.cost || 0), 0);
+    const promoDays = new Set();
+    (l.promotions || []).filter(p => !from || (p.endDate >= from && p.startDate <= to))
+      .forEach(p => { let d = p.startDate; while (d <= p.endDate) { promoDays.add(d); d = shiftDate(d, 1); } });
+    const promoStats = filtered.filter(s => promoDays.has(s.date) && s.views !== null);
+    const normalStats = filtered.filter(s => !promoDays.has(s.date) && s.views !== null);
+    const avgPromoViews = promoStats.length ? promoStats.reduce((s,x)=>s+(x.views||0),0)/promoStats.length : 0;
+    const avgNormalViews = normalStats.length ? normalStats.reduce((s,x)=>s+(x.views||0),0)/normalStats.length : 0;
+    const promoLift = avgNormalViews > 0 ? ((avgPromoViews - avgNormalViews) / avgNormalViews * 100) : null;
+    const costPerContact = kpis && kpis.totalContacts > 0 && totalCost > 0 ? (totalCost / kpis.totalContacts) : null;
+    const convRate = kpis && kpis.totalViews > 0 ? (kpis.totalContacts / kpis.totalViews * 100) : 0;
+    const favRate = kpis && kpis.totalViews > 0 ? (kpis.totalFavorites / kpis.totalViews * 100) : 0;
+    return { listing: l, kpis, filtered, totalCost, promoLift, costPerContact, convRate, favRate, color: CHART_COLORS[idx % CHART_COLORS.length] };
+  });
+
+  // ── Общие KPI региона ──
+  const totalViews = listingStats.reduce((s, x) => s + (x.kpis?.totalViews || 0), 0);
+  const totalContacts = listingStats.reduce((s, x) => s + (x.kpis?.totalContacts || 0), 0);
+  const totalFavs = listingStats.reduce((s, x) => s + (x.kpis?.totalFavorites || 0), 0);
+  const totalSpend = listingStats.reduce((s, x) => s + x.totalCost, 0);
+  const avgConv = totalViews > 0 ? (totalContacts / totalViews * 100) : 0;
+  const withData = listingStats.filter(x => x.kpis && x.kpis.days > 0);
+
+  // ── Лучшие/худшие ──
+  const byViews = [...listingStats].filter(x=>x.kpis).sort((a,b)=>(b.kpis.totalViews||0)-(a.kpis.totalViews||0));
+  const byContacts = [...listingStats].filter(x=>x.kpis).sort((a,b)=>(b.kpis.totalContacts||0)-(a.kpis.totalContacts||0));
+  const byConv = [...listingStats].filter(x=>x.kpis&&x.kpis.totalViews>0).sort((a,b)=>b.convRate-a.convRate);
+  const byFav = [...listingStats].filter(x=>x.kpis).sort((a,b)=>(b.kpis.totalFavorites||0)-(a.kpis.totalFavorites||0));
+
+  // ── Тренды (первая половина vs вторая) ──
+  const trendHtml = (val) => {
+    if (val === null) return `<span class="trend-badge trend-flat">—</span>`;
+    if (val > 5) return `<span class="trend-badge trend-up">↑ ${val}%</span>`;
+    if (val < -5) return `<span class="trend-badge trend-down">↓ ${Math.abs(val)}%</span>`;
+    return `<span class="trend-badge trend-flat">→ ${val}%</span>`;
+  };
+
+  // ── Лучший тип продвижения ──
+  const promoTypeStats = { x2: { totalLift: 0, count: 0 }, x5: { totalLift: 0, count: 0 }, x10: { totalLift: 0, count: 0 } };
+  listingStats.forEach(({ listing, filtered }) => {
+    ['x2','x5','x10'].forEach(type => {
+      const typeDays = new Set();
+      (listing.promotions||[]).filter(p=>p.type===type&&(!from||(p.endDate>=from&&p.startDate<=to)))
+        .forEach(p=>{ let d=p.startDate; while(d<=p.endDate){typeDays.add(d);d=shiftDate(d,1);} });
+      const ts = filtered.filter(s=>typeDays.has(s.date)&&s.views!==null);
+      const ns = filtered.filter(s=>!typeDays.has(s.date)&&s.views!==null);
+      if (ts.length > 0 && ns.length > 0) {
+        const avgT = ts.reduce((s,x)=>s+(x.views||0),0)/ts.length;
+        const avgN = ns.reduce((s,x)=>s+(x.views||0),0)/ns.length;
+        if (avgN > 0) { promoTypeStats[type].totalLift += (avgT-avgN)/avgN*100; promoTypeStats[type].count++; }
+      }
+    });
+  });
+  const bestPromoType = Object.entries(promoTypeStats)
+    .filter(([,v])=>v.count>0)
+    .sort((a,b)=>(b[1].totalLift/b[1].count)-(a[1].totalLift/a[1].count))[0];
+
+  // ── Тепловая карта активности ──
+  function buildHeatmap(listingStats) {
+    const allDates = {};
+    listingStats.forEach(({ filtered }) => {
+      filtered.forEach(s => {
+        if (!allDates[s.date]) allDates[s.date] = 0;
+        allDates[s.date] += (s.views || 0);
+      });
+    });
+    // last 16 weeks (112 days)
+    const endDate = todayStr();
+    const startDate = shiftDate(endDate, -111);
+    const vals = [];
+    let d = startDate;
+    while (d <= endDate) { vals.push(allDates[d] || 0); d = shiftDate(d, 1); }
+    const maxVal = Math.max(...vals, 1);
+    const level = v => { if (!v) return ''; if (v < maxVal*0.25) return 'l1'; if (v < maxVal*0.5) return 'l2'; if (v < maxVal*0.75) return 'l3'; return 'l4'; };
+
+    // group into weeks (cols), days of week (rows)
+    const weeks = [];
+    let cur = startDate;
+    // align to Monday
+    const startD = new Date(startDate);
+    const dow = startD.getDay();
+    const alignOffset = dow === 0 ? 6 : dow - 1;
+    cur = shiftDate(startDate, -alignOffset);
+    while (cur <= endDate) {
+      const week = [];
+      for (let i = 0; i < 7; i++) {
+        const dd = shiftDate(cur, i);
+        week.push({ date: dd, val: allDates[dd] || 0, inRange: dd >= startDate && dd <= endDate });
+      }
+      weeks.push(week);
+      cur = shiftDate(cur, 7);
+    }
+
+    const monthLabels = weeks.map(w => {
+      const d = new Date(w[0].date);
+      return d.getDate() <= 7 ? ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][d.getMonth()] : '';
+    });
+
+    return `
+      <div class="heatmap-wrap">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Активность ввода данных (16 недель)</div>
+        <div class="heatmap-month-row">${monthLabels.map(l=>`<div class="heatmap-month-label">${l}</div>`).join('')}</div>
+        <div class="heatmap-grid">
+          ${weeks.map((w,wi) => `<div class="heatmap-col">
+            ${w.map(cell => cell.inRange
+              ? `<div class="heatmap-cell ${level(cell.val)}" title="${cell.date}: ${cell.val} показов"></div>`
+              : `<div class="heatmap-cell" style="opacity:0"></div>`
+            ).join('')}
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--text3);">
+          Меньше
+          <div style="display:flex;gap:3px;">
+            <div style="width:12px;height:12px;border-radius:2px;background:var(--bg3)"></div>
+            <div style="width:12px;height:12px;border-radius:2px;" class="heatmap-cell l1"></div>
+            <div style="width:12px;height:12px;border-radius:2px;" class="heatmap-cell l2"></div>
+            <div style="width:12px;height:12px;border-radius:2px;" class="heatmap-cell l3"></div>
+            <div style="width:12px;height:12px;border-radius:2px;" class="heatmap-cell l4"></div>
+          </div>
+          Больше
+        </div>
+      </div>`;
+  }
+
+  function topTable(title, items, valFn, labelFn, color) {
+    if (items.length === 0) return '';
+    const maxVal = Math.max(...items.map(valFn), 1);
+    const ranks = ['🥇','🥈','🥉'];
+    return `<div class="top-table">
+      <div class="top-table-title">${title}</div>
+      ${items.slice(0,5).map((item,i)=>{
+        const val = valFn(item);
+        const pct = Math.round(val/maxVal*100);
+        return `<div class="top-row">
+          <div class="top-rank">${ranks[i]||i+1}</div>
+          <div class="top-name">${esc(item.listing.title)}</div>
+          <div class="top-bar-wrap"><div class="top-bar" style="width:${pct}%;background:${color||'var(--accent)'}"></div></div>
+          <div class="top-val">${labelFn(val)}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  function roiTable() {
+    const rows = listingStats.filter(x=>x.kpis).map(({listing,kpis,totalCost,costPerContact,convRate,promoLift,color})=>{
+      const cpc = costPerContact ? `${Math.round(costPerContact).toLocaleString('ru-RU')} ₽` : '—';
+      const lift = promoLift !== null ? `${promoLift>0?'+':''}${Math.round(promoLift)}%` : '—';
+      const liftClass = promoLift===null?'roi-neutral':promoLift>0?'roi-positive':'roi-negative';
+      return `<div class="roi-row">
+        <div style="font-weight:500;color:var(--text);display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(listing.title)}</span>
+        </div>
+        <div style="font-family:var(--mono);color:var(--text2)">${totalCost>0?totalCost.toLocaleString('ru-RU')+' ₽':'—'}</div>
+        <div style="font-family:var(--mono);color:var(--text2)">${kpis.totalContacts.toLocaleString('ru-RU')}</div>
+        <div style="font-family:var(--mono);color:var(--text2)">${convRate.toFixed(1)}%</div>
+        <div style="font-family:var(--mono)">${cpc}</div>
+        <div class="${liftClass};font-family:var(--mono)">${lift}</div>
+      </div>`;
+    });
+    if (!rows.length) return '';
+    return `<div class="roi-table">
+      <div class="roi-row roi-head" style="padding:10px 16px;">
+        <div>Объявление</div><div>Затраты</div><div>Контакты</div><div>Конверсия</div><div>₽/контакт</div><div>Буст ×</div>
+      </div>
+      ${rows.join('')}
+    </div>`;
+  }
+
+  // ── Сборка страницы ──
+  document.getElementById('analyticsSub').textContent = `${region.name} · ${allListings.length} ${plural(allListings.length,'объявление','объявления','объявлений')}`;
+
+  content.innerHTML = `
+
+    <!-- Сводные KPI -->
+    <div class="analytics-section">
+      <div class="analytics-section-title">Сводка по региону</div>
+      <div class="insight-grid">
+        <div class="insight-card highlight">
+          <div class="insight-icon">👁</div>
+          <div class="insight-body">
+            <div class="insight-label">Всего показов</div>
+            <div class="insight-value">${totalViews.toLocaleString('ru-RU')}</div>
+            <div class="insight-sub">ср. ${totalViews&&withData.length?Math.round(totalViews/Math.max(1,...withData.map(x=>x.kpis.days))).toLocaleString('ru-RU'):0}/день по всем</div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-icon">📞</div>
+          <div class="insight-body">
+            <div class="insight-label">Всего контактов</div>
+            <div class="insight-value">${totalContacts.toLocaleString('ru-RU')}</div>
+            <div class="insight-sub">конверсия ${avgConv.toFixed(1)}%</div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-icon">⭐</div>
+          <div class="insight-body">
+            <div class="insight-label">В избранное</div>
+            <div class="insight-value">${totalFavs.toLocaleString('ru-RU')}</div>
+            <div class="insight-sub">${totalViews>0?((totalFavs/totalViews)*100).toFixed(1):0}% от показов</div>
+          </div>
+        </div>
+        <div class="insight-card ${totalSpend>0?'warn':''}">
+          <div class="insight-icon">💰</div>
+          <div class="insight-body">
+            <div class="insight-label">Затраты на продвижение</div>
+            <div class="insight-value">${totalSpend>0?totalSpend.toLocaleString('ru-RU')+' ₽':'—'}</div>
+            <div class="insight-sub">${totalSpend>0&&totalContacts>0?'₽/контакт: '+Math.round(totalSpend/totalContacts).toLocaleString('ru-RU'):'Нет данных о продвижении'}</div>
+          </div>
+        </div>
+        ${bestPromoType ? `
+        <div class="insight-card highlight">
+          <div class="insight-icon">🚀</div>
+          <div class="insight-body">
+            <div class="insight-label">Лучший тип продвижения</div>
+            <div class="insight-value">${bestPromoType[0].replace('x','×')}</div>
+            <div class="insight-sub">+${Math.round(bestPromoType[1].totalLift/bestPromoType[1].count)}% к показам в среднем</div>
+          </div>
+        </div>` : ''}
+        <div class="insight-card">
+          <div class="insight-icon">📊</div>
+          <div class="insight-body">
+            <div class="insight-label">Объявлений с данными</div>
+            <div class="insight-value">${withData.length} / ${allListings.length}</div>
+            <div class="insight-sub">${allListings.length-withData.length>0?`${allListings.length-withData.length} без данных за период`:'Все объявления заполнены'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Тренды -->
+    ${withData.length>0?`
+    <div class="analytics-section">
+      <div class="analytics-section-title">Тренды объявлений</div>
+      <div class="insight-grid">
+        ${withData.map(({listing,kpis,color})=>`
+          <div class="insight-card">
+            <div class="insight-body">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+                <div class="insight-label" style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(listing.title)}</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:11px;color:var(--text3)">Показы:</span> ${trendHtml(kpis.deltaViews)}
+                <span style="font-size:11px;color:var(--text3)">Контакты:</span> ${trendHtml(kpis.deltaContacts)}
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:6px;">
+                Конв. ${((kpis.totalContacts/Math.max(kpis.totalViews,1))*100).toFixed(1)}% · Изб. ${((kpis.totalFavorites/Math.max(kpis.totalViews,1))*100).toFixed(1)}%
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- Топы -->
+    <div class="analytics-section">
+      <div class="analytics-section-title">Рейтинги объявлений</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        ${topTable('🏆 Топ по показам', byViews, x=>x.kpis?.totalViews||0, v=>v.toLocaleString('ru-RU'), '#00c896')}
+        ${topTable('📞 Топ по контактам', byContacts, x=>x.kpis?.totalContacts||0, v=>v.toLocaleString('ru-RU'), '#4a9eff')}
+        ${topTable('🎯 Топ по конверсии', byConv, x=>x.convRate, v=>v.toFixed(1)+'%', '#a78bfa')}
+        ${topTable('⭐ Топ по избранному', byFav, x=>x.kpis?.totalFavorites||0, v=>v.toLocaleString('ru-RU'), '#f0a020')}
+      </div>
+    </div>
+
+    <!-- ROI продвижений -->
+    <div class="analytics-section">
+      <div class="analytics-section-title">ROI продвижений</div>
+      ${roiTable()}
+    </div>
+
+    <!-- Визуал: конверсии на scatter + динамика по всем -->
+    <div class="analytics-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="chart-card">
+          <div class="chart-card-title">Распределение конверсий</div>
+          <div class="chart-wrap"><canvas id="analyticsConvChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Суммарная динамика региона</div>
+          <div class="chart-wrap"><canvas id="analyticsRegionChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Тепловая карта -->
+    <div class="analytics-section">
+      <div class="analytics-section-title">Карта активности ввода</div>
+      ${buildHeatmap(listingStats)}
+    </div>`;
+
+  // ── Строим графики ──
+  initChartDefaults();
+  destroyChart(analyticsChart1);
+  destroyChart(analyticsChart2);
+
+  // Конверсии bar chart
+  analyticsChart1 = new Chart(document.getElementById('analyticsConvChart'), {
+    type: 'bar',
+    data: {
+      labels: listingStats.filter(x=>x.kpis).map(({listing})=>listing.title.length>16?listing.title.slice(0,16)+'…':listing.title),
+      datasets: [
+        { label: 'Показ→Контакт %', data: listingStats.filter(x=>x.kpis).map(x=>+x.convRate.toFixed(1)), backgroundColor: '#4a9effcc', borderRadius:4, borderSkipped:false },
+        { label: 'Показ→Избранное %', data: listingStats.filter(x=>x.kpis).map(x=>+x.favRate.toFixed(1)), backgroundColor: '#f0a020cc', borderRadius:4, borderSkipped:false },
+      ],
+    },
+    options: { ...chartOptions(), plugins: { ...chartOptions().plugins, legend: { display:true, labels:{color:'#9090a0',boxWidth:10,padding:10} } } },
+  });
+
+  // Суммарная динамика по дням
+  const allDatesSet2 = new Set();
+  listingStats.forEach(({filtered}) => filtered.forEach(s => allDatesSet2.add(s.date)));
+  const allDates2 = [...allDatesSet2].sort();
+  const regionViewsByDay = allDates2.map(d => {
+    return listingStats.reduce((s,{filtered})=>{
+      const found = filtered.find(x=>x.date===d);
+      return s + (found?.views||0);
+    },0);
+  });
+  const regionContactsByDay = allDates2.map(d => {
+    return listingStats.reduce((s,{filtered})=>{
+      const found = filtered.find(x=>x.date===d);
+      return s + (found?.contacts||0);
+    },0);
+  });
+
+  analyticsChart2 = new Chart(document.getElementById('analyticsRegionChart'), {
+    type: 'line',
+    data: {
+      labels: allDates2.map(d=>formatDateShort(d)),
+      datasets: [
+        { label:'Показы', data:regionViewsByDay, borderColor:'#00c896', backgroundColor:'#00c89618', borderWidth:2, tension:0.3, pointRadius:allDates2.length>60?0:2, fill:true, spanGaps:true },
+        { label:'Контакты', data:regionContactsByDay, borderColor:'#4a9eff', backgroundColor:'transparent', borderWidth:2, tension:0.3, pointRadius:allDates2.length>60?0:2, spanGaps:true },
+      ],
+    },
+    options: { ...chartOptions(), plugins: { ...chartOptions().plugins, legend:{ display:true, labels:{color:'#9090a0',boxWidth:10,padding:10} } } },
+  });
+}
+
+// ─── STEP 5: CLOUD SYNC + PWA ───
+
+const CLOUD_CONFIG_KEY = 'avitoTrackerCloud';
+
+let cloudConfig = {
+  cfUrl: '',
+  autoSync: false,
+  lastSync: null,
+};
+
+function loadCloudConfig() {
+  try {
+    const saved = localStorage.getItem(CLOUD_CONFIG_KEY);
+    if (saved) cloudConfig = { ...cloudConfig, ...JSON.parse(saved) };
+  } catch(e) {}
+  applyCloudConfig();
+}
+
+function applyCloudConfig() {
+  const cfUrlEl = document.getElementById('cfUrl');
+  const autoToggle = document.getElementById('autoSyncToggle');
+  const autoLabel = document.getElementById('autoSyncLabel');
+  if (cfUrlEl) cfUrlEl.value = cloudConfig.cfUrl || '';
+  if (autoToggle) { autoToggle.checked = cloudConfig.autoSync; autoLabel.textContent = cloudConfig.autoSync ? 'Вкл' : 'Выкл'; }
+  updateSyncStatus();
+}
+
+function saveCloudConfig() {
+  const url = document.getElementById('cfUrl')?.value.trim() || '';
+  cloudConfig.cfUrl = url;
+  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cloudConfig));
+  const badge = document.getElementById('configSavedBadge');
+  if (badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 2000); }
+  updateSyncStatus();
+  if (url) syncNow();
+}
+
+function toggleAutoSync(val) {
+  cloudConfig.autoSync = val;
+  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cloudConfig));
+  document.getElementById('autoSyncLabel').textContent = val ? 'Вкл' : 'Выкл';
+}
+
+function updateSyncStatus() {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  const statusText = document.getElementById('cloudStatusText');
+  const statusDot = document.getElementById('cloudStatusDot');
+  const lastSyncText = document.getElementById('lastSyncText');
+
+  const hasCloud = !!cloudConfig.cfUrl;
+  const lastSync = cloudConfig.lastSync ? new Date(cloudConfig.lastSync) : null;
+  const lastSyncStr = lastSync ? lastSync.toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+
+  if (lastSyncText) lastSyncText.textContent = lastSyncStr;
+
+  if (!hasCloud) {
+    if (dot) { dot.className = 'sync-dot'; }
+    if (label) label.textContent = 'локально';
+    if (statusText) statusText.textContent = 'Не настроено — работает локально';
+    if (statusDot) statusDot.className = 'sync-dot';
+  } else {
+    if (dot) dot.className = 'sync-dot ok';
+    if (label) label.textContent = lastSync ? 'синхр. ' + lastSyncStr : 'не синхр.';
+    if (statusText) statusText.textContent = 'Подключено: ' + cloudConfig.cfUrl.slice(0, 40) + '…';
+    if (statusDot) statusDot.className = 'sync-dot ok';
+  }
+}
+
+let isSyncing = false;
+
+async function syncNow() {
+  if (!cloudConfig.cfUrl) { showToast('Укажите URL Cloud Function в настройках'); navigate('settings'); return; }
+  if (isSyncing) return;
+  isSyncing = true;
+
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  const btn = document.getElementById('syncBtn');
+  if (dot) dot.className = 'sync-dot syncing';
+  if (label) label.textContent = 'синхр…';
+  if (btn) btn.disabled = true;
+
+  try {
+    // 1. Получаем данные с сервера
+    const getResp = await fetch(cloudConfig.cfUrl + '?action=get', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!getResp.ok) throw new Error(`HTTP ${getResp.status}`);
+    const serverData = await getResp.json();
+
+    // 2. Мёрдж: объединяем регионы сервера и локальные
+    if (serverData && serverData.regions) {
+      const merged = mergeStates(state, serverData);
+      state = merged;
+      saveState();
+    }
+
+    // 3. Отправляем актуальное состояние на сервер
+    const putResp = await fetch(cloudConfig.cfUrl + '?action=set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...state, _syncedAt: new Date().toISOString() }),
+    });
+
+    if (!putResp.ok) throw new Error(`HTTP ${putResp.status}`);
+
+    cloudConfig.lastSync = new Date().toISOString();
+    localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cloudConfig));
+
+    // Обновляем UI
+    renderRegionSelect();
+    renderListings();
+    updateSyncStatus();
+    showToast('✓ Синхронизация выполнена');
+
+  } catch(err) {
+    if (dot) dot.className = 'sync-dot error';
+    if (label) label.textContent = 'ошибка';
+    showToast('Ошибка синхронизации: ' + err.message);
+    console.error('Sync error:', err);
+  } finally {
+    isSyncing = false;
+    if (btn) btn.disabled = false;
+    setTimeout(() => updateSyncStatus(), 3000);
+  }
+}
+
+async function testCloudConnection() {
+  const url = document.getElementById('cfUrl')?.value.trim();
+  if (!url) { showToast('Введите URL Cloud Function'); return; }
+  showToast('Проверяю соединение…');
+  try {
+    const resp = await fetch(url + '?action=ping', { method: 'GET' });
+    if (resp.ok) showToast('✓ Соединение успешно!');
+    else showToast('Ошибка: сервер вернул ' + resp.status);
+  } catch(e) {
+    showToast('Не удалось подключиться: ' + e.message);
+  }
+}
+
+// Умный мёрдж двух состояний: побеждают более новые данные
+function mergeStates(local, remote) {
+  if (!remote || !remote.regions) return local;
+  const merged = { ...local };
+  const localRegMap = Object.fromEntries(local.regions.map(r => [r.id, r]));
+  const remoteRegMap = Object.fromEntries(remote.regions.map(r => [r.id, r]));
+  const allRegIds = new Set([...Object.keys(localRegMap), ...Object.keys(remoteRegMap)]);
+  merged.regions = [...allRegIds].map(rid => {
+    const lr = localRegMap[rid];
+    const rr = remoteRegMap[rid];
+    if (!lr) return rr;
+    if (!rr) return lr;
+    // Мёрдж объявлений внутри региона
+    const localListMap = Object.fromEntries((lr.listings||[]).map(l => [l.id, l]));
+    const remoteListMap = Object.fromEntries((rr.listings||[]).map(l => [l.id, l]));
+    const allListIds = new Set([...Object.keys(localListMap), ...Object.keys(remoteListMap)]);
+    const mergedListings = [...allListIds].map(lid => {
+      const ll = localListMap[lid];
+      const rl = remoteListMap[lid];
+      if (!ll) return rl;
+      if (!rl) return ll;
+      // Мёрдж статистики: объединяем по датам, локальная приоритетнее
+      const statsMap = {};
+      (rl.stats||[]).forEach(s => statsMap[s.date] = s);
+      (ll.stats||[]).forEach(s => statsMap[s.date] = s); // локальная перезаписывает
+      // Мёрдж продвижений: по id, объединяем уникальные
+      const promoMap = {};
+      (rl.promotions||[]).forEach(p => promoMap[p.id] = p);
+      (ll.promotions||[]).forEach(p => promoMap[p.id] = p);
+      return { ...rl, ...ll, stats: Object.values(statsMap).sort((a,b)=>a.date.localeCompare(b.date)), promotions: Object.values(promoMap) };
+    });
+    return { ...rr, ...lr, listings: mergedListings };
+  });
+  return merged;
+}
+
+// Автосинхронизация при сохранении
+const _origSaveState = saveState;
+function saveState() {
+  localStorage.setItem('avitoTracker', JSON.stringify(state));
+  if (cloudConfig.autoSync && cloudConfig.cfUrl) {
+    clearTimeout(saveState._debounce);
+    saveState._debounce = setTimeout(() => syncNow(), 2000);
+  }
+}
+
+// ─── PWA: Service Worker ───
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  }
+}
+
+// ─── INIT ───
+function init() {
+  loadState();
+  loadCloudConfig();
+  renderRegionSelect();
+  const r = getCurrentRegion();
+  document.getElementById('topbarRegion').textContent = r ? r.name : '';
+  renderListings();
+  renderRegions();
+  registerSW();
+}
+
+init();
+</script>
+</body>
+</html>

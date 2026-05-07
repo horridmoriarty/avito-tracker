@@ -1,0 +1,34 @@
+{
+  "name": "Авито Аналитика Трекер",
+  "short_name": "Авито Трекер",
+  "description": "Трекер статистики объявлений Авито по регионам",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0f11",
+  "theme_color": "#0f0f11",
+  "orientation": "any",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%230f0f11'/%3E%3Cpath d='M40 140 L72 72 L96 108 L120 48 L152 88' stroke='%2300c896' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230f0f11'/%3E%3Cpath d='M100 380 L190 180 L256 280 L320 120 L412 220' stroke='%2300c896' stroke-width='32' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ввод данных",
+      "short_name": "Ввод",
+      "url": "./index.html",
+      "description": "Быстрый ввод ежедневных показателей"
+    }
+  ],
+  "categories": ["business", "productivity"]
+}
